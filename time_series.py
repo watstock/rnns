@@ -9,6 +9,7 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import MinMaxScaler
 
 def symbol_to_path(symbol, base_dir="data"):
   """Return CSV file path given ticker symbol."""
@@ -66,14 +67,13 @@ def test_run():
     
     # Get stock data
     df = get_data(symbols, dates)
-    #plot_data(df)
 
-    # Compute daily returns
-    daily_returns = compute_daily_returns(df)
-
-    # Prepare data for RNN
-    dataset = daily_returns.values
+    # Normalize the dataset    
+    dataset = df.values
     dataset = dataset.astype('float32')
+    
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
     train_size = int(len(dataset) * 0.67)
@@ -82,46 +82,55 @@ def test_run():
     print(len(train), len(test))
 
     # Reshape into X=t and Y=t+1
-    look_back = 3
+    look_back = 5
     trainX, trainY = create_dataset(train, look_back)
     testX, testY = create_dataset(test, look_back)
 
     # Reshape input to be [samples, time steps, features], currently we have [samples, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
-    testX = np.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
+    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 
     # Create and fit the LSTM network
     model = Sequential()
-    model.add(LSTM(4, input_dim=look_back))
+    model.add(LSTM(4, input_dim=1))
     model.add(Dense(1))
     model.compile(loss='mean_squared_error', optimizer='adam')
-    model.fit(trainX, trainY, nb_epoch=30, batch_size=1, verbose=2)
+    model.fit(trainX, trainY, nb_epoch=50, batch_size=1, verbose=2)
 
     # Make predictions
     trainPredict = model.predict(trainX)
     testPredict = model.predict(testX)
 
+    # Invert predictions
+    trainPredict = scaler.inverse_transform(trainPredict)
+    trainY = scaler.inverse_transform([trainY])
+    testPredict = scaler.inverse_transform(testPredict)
+    testY = scaler.inverse_transform([testY])
+
     # Calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(trainY, trainPredict[:,0]))
+    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
     print('Train Score: %.4f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(testY, testPredict[:,0]))
+    testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
     print('Test Score: %.4f RMSE' % (testScore))
 
-    # shift train predictions for plotting
+    # Shift train predictions for plotting
     trainPredictPlot = np.empty_like(dataset)
     trainPredictPlot[:, :] = np.nan
     trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
-    # shift test predictions for plotting
+    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training dataset'])
+
+    # Shift test predictions for plotting
     testPredictPlot = np.empty_like(dataset)
     testPredictPlot[:, :] = np.nan
     testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
-    # plot baseline and predictions
-    plt.plot(dataset)
-    plt.plot(trainPredictPlot)
-    plt.plot(testPredictPlot)
-    plt.show()
+    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test dataset'])
+    
+    # Plot baseline and predictions
+    ax = df.plot(title='SPY prediction', label='SPY')
+    train_df.plot(label='Training dataset', ax=ax)
+    test_df.plot(label='Test dataset', ax=ax)
 
-    # plot_data(daily_returns, title="Daily returns", ylabel="Daily returns")
+    plt.show()
 
 if __name__ == "__main__":
     test_run()
