@@ -48,25 +48,33 @@ def compute_daily_returns(df):
   return daily_returns
 
 
-def create_dataset(dataset, look_back=1):
-  """Converts an array of values into a dataset matrix"""
+def create_dataset(df, look_back=1):
+  """Converts a dataframe of values into a matrix"""
   dataX, dataY = [], []
-  for i in range(len(dataset)-look_back-1):
-    a = dataset[i:(i+look_back), 0]
-    dataX.append(a)
-    dataY.append(dataset[i + look_back, 0])
+  for i in range(len(df)-look_back):
+    dataX.append(df[i:(i+look_back), 0])
+    dataY.append(df[i + look_back, 0])
   return np.array(dataX), np.array(dataY)
 
 def test_run():
 
     # Define a date range
-    dates = pd.date_range('2015-11-28', '2016-11-25')
+    dates = pd.date_range('2011-11-28', '2016-11-25')
 
     # Choose stock symbols to read
     symbols = ['SPY']
     
+    # since we are using stateful rnn tsteps can be set to 1
+    tsteps = 1
+    batch_size = 5
+    epochs = 50
+
     # Get stock data
     df = get_data(symbols, dates)
+
+    # Making df to be devisible by batch size (to use with statefull LSTMs)
+    df_offset = (len(df) - 2 * tsteps ) % batch_size
+    df = df.ix[df_offset:]
 
     # Normalize the dataset    
     dataset = df.values
@@ -76,30 +84,49 @@ def test_run():
     dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
-    train_size = int(len(dataset) * 0.67)
+    train_size = (int((len(dataset) - 2 * tsteps) * 0.67) // batch_size) * batch_size + tsteps
     test_size = len(dataset) - train_size
     train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
-    print(len(train), len(test))
+    print('Train set:', len(train), ', test set:', len(test))
 
     # Reshape into X=t and Y=t+1
-    look_back = 5
-    trainX, trainY = create_dataset(train, look_back)
-    testX, testY = create_dataset(test, look_back)
+    trainX, trainY = create_dataset(train, tsteps)
+    testX, testY = create_dataset(test, tsteps)
 
     # Reshape input to be [samples, time steps, features], currently we have [samples, features]
     trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 
     # Create and fit the LSTM network
+    print('Creating Model')
     model = Sequential()
-    model.add(LSTM(4, input_dim=1))
+    model.add(LSTM(50,
+               batch_input_shape=(batch_size, tsteps, 1),
+               return_sequences=True,
+               stateful=True))
+    model.add(LSTM(50,
+               return_sequences=False,
+               stateful=True))
     model.add(Dense(1))
-    model.compile(loss='mean_squared_error', optimizer='adam')
-    model.fit(trainX, trainY, nb_epoch=50, batch_size=1, verbose=2)
+
+    model.compile(loss='mse', optimizer='adam')
+
+    print('Training')
+    for i in range(epochs):
+      print('Epoch', i, '/', epochs)
+      model.fit(trainX, 
+                trainY, 
+                batch_size=batch_size,
+                verbose=1,
+                nb_epoch=1, 
+                shuffle=False)
+      model.reset_states()
 
     # Make predictions
-    trainPredict = model.predict(trainX)
-    testPredict = model.predict(testX)
+    print('Predicting')
+    trainPredict = model.predict(trainX, batch_size=batch_size)
+    model.reset_states()
+    testPredict = model.predict(testX, batch_size=batch_size)
 
     # Invert predictions
     trainPredict = scaler.inverse_transform(trainPredict)
@@ -116,17 +143,17 @@ def test_run():
     # Shift train predictions for plotting
     trainPredictPlot = np.empty_like(dataset)
     trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
+    trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict
     train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training dataset'])
 
     # Shift test predictions for plotting
     testPredictPlot = np.empty_like(dataset)
     testPredictPlot[:, :] = np.nan
-    testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
+    testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict
     test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test dataset'])
     
     # Plot baseline and predictions
-    ax = df.plot(title='SPY prediction', label='SPY')
+    ax = df.plot(title='SPY 1-day prediction', label='SPY')
     train_df.plot(label='Training dataset', ax=ax)
     test_df.plot(label='Test dataset', ax=ax)
 
