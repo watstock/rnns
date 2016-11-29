@@ -1,3 +1,5 @@
+
+from __future__ import print_function
 import os
 import numpy as np
 import pandas as pd
@@ -7,7 +9,10 @@ import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
-from sklearn.preprocessing import MinMaxScaler
+from keras.layers import Dropout
+from keras.layers import Activation
+from keras.callbacks import EarlyStopping
+
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 
@@ -56,25 +61,25 @@ def create_dataset(df, look_back=1):
     dataY.append(df[i + look_back, 0])
   return np.array(dataX), np.array(dataY)
 
-def test_run():
+def main():
 
     # Define a date range
-    dates = pd.date_range('2011-11-28', '2016-11-25')
+    dates = pd.date_range('2006-11-29', '2016-11-28')
 
     # Choose stock symbols to read
     symbols = ['SPY']
     
     # since we are using stateful rnn tsteps can be set to 1
-    tsteps = 1
-    batch_size = 5
-    epochs = 50
+    tsteps = 3
+    batch_size = 1
+    epochs = 1000
 
     # Get stock data
     df = get_data(symbols, dates)
 
     # Making df to be devisible by batch size (to use with statefull LSTMs)
-    df_offset = (len(df) - 2 * tsteps ) % batch_size
-    df = df.ix[df_offset:]
+    # df_offset = (len(df) - 2 * tsteps ) % batch_size
+    # df = df.ix[df_offset:]
 
     # Normalize the dataset    
     dataset = df.values
@@ -84,7 +89,8 @@ def test_run():
     dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
-    train_size = (int((len(dataset) - 2 * tsteps) * 0.67) // batch_size) * batch_size + tsteps
+    #train_size = (int((len(dataset) - 2 * tsteps) * 0.67) // batch_size) * batch_size + tsteps
+    train_size = int(len(dataset) * 0.8)
     test_size = len(dataset) - train_size
     train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
     print('Train set:', len(train), ', test set:', len(test))
@@ -100,32 +106,45 @@ def test_run():
     # Create and fit the LSTM network
     print('Creating Model')
     model = Sequential()
-    model.add(LSTM(50,
-               batch_input_shape=(batch_size, tsteps, 1),
-               return_sequences=True,
-               stateful=True))
-    model.add(LSTM(50,
-               return_sequences=False,
-               stateful=True))
+    model.add(LSTM(300,
+               input_shape=(tsteps, 1),
+               return_sequences=True))
+    model.add(Dropout(0.2))
+    model.add(LSTM(500,
+               return_sequences=True))
+    model.add(Dropout(0.2))  
+    model.add(LSTM(200,
+               return_sequences=False))
+    model.add(Dropout(0.2))
     model.add(Dense(1))
 
-    model.compile(loss='mse', optimizer='adam')
+    model.compile(loss='mse', optimizer='rmsprop')
 
-    print('Training')
-    for i in range(epochs):
-      print('Epoch', i, '/', epochs)
-      model.fit(trainX, 
-                trainY, 
-                batch_size=batch_size,
-                verbose=1,
-                nb_epoch=1, 
-                shuffle=False)
-      model.reset_states()
+    print('Training...')
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+    model.fit(trainX, 
+              trainY, 
+              batch_size=batch_size, 
+              nb_epoch=epochs,
+              verbose=1,
+              validation_split=0.1, 
+              callbacks=[early_stopping])
+    # for i in range(epochs):
+    #   print('Epoch', i, '/', epochs)
+    #   model.fit(trainX, 
+    #             trainY, 
+    #             batch_size=batch_size,
+    #             verbose=1,
+    #             nb_epoch=1, 
+    #             shuffle=False,
+    #             validation_split=0.1,
+    #             callbacks=[early_stopping])
+    #   model.reset_states()
 
     # Make predictions
     print('Predicting')
     trainPredict = model.predict(trainX, batch_size=batch_size)
-    model.reset_states()
+    #model.reset_states()
     testPredict = model.predict(testX, batch_size=batch_size)
 
     # Invert predictions
@@ -160,4 +179,4 @@ def test_run():
     plt.show()
 
 if __name__ == "__main__":
-    test_run()
+    main()
