@@ -69,17 +69,17 @@ def main():
     # Choose stock symbols to read
     symbols = ['SPY']
     
-    # since we are using stateful rnn tsteps can be set to 1
-    tsteps = 3
+    # params
+    tsteps = 21
     batch_size = 1
-    epochs = 1000
+    epochs = 30
 
     # Get stock data
     df = get_data(symbols, dates)
 
     # Making df to be devisible by batch size (to use with statefull LSTMs)
-    # df_offset = (len(df) - 2 * tsteps ) % batch_size
-    # df = df.ix[df_offset:]
+    df_offset = (len(df) - 2 * tsteps ) % batch_size
+    df = df.ix[df_offset:]
 
     # Normalize the dataset    
     dataset = df.values
@@ -89,8 +89,8 @@ def main():
     dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
-    #train_size = (int((len(dataset) - 2 * tsteps) * 0.67) // batch_size) * batch_size + tsteps
-    train_size = int(len(dataset) * 0.8)
+    train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
+    #train_size = int(len(dataset) * 0.8)
     test_size = len(dataset) - train_size
     train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
     print('Train set:', len(train), ', test set:', len(test))
@@ -106,16 +106,13 @@ def main():
     # Create and fit the LSTM network
     print('Creating Model')
     model = Sequential()
-    model.add(LSTM(300,
-               input_shape=(tsteps, 1),
-               return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(500,
-               return_sequences=True))
-    model.add(Dropout(0.2))  
-    model.add(LSTM(200,
-               return_sequences=False))
-    model.add(Dropout(0.2))
+    model.add(LSTM(32,
+                   input_shape=(tsteps, 1),
+                   return_sequences=False,
+                   stateful=False))
+    # model.add(LSTM(4,
+    #                return_sequences=False,
+    #                stateful=True))
     model.add(Dense(1))
 
     model.compile(loss='mse', optimizer='rmsprop')
@@ -129,22 +126,20 @@ def main():
               verbose=1,
               validation_split=0.1, 
               callbacks=[early_stopping])
-    # for i in range(epochs):
+    # for i in xrange(epochs):
     #   print('Epoch', i, '/', epochs)
     #   model.fit(trainX, 
     #             trainY, 
     #             batch_size=batch_size,
     #             verbose=1,
     #             nb_epoch=1, 
-    #             shuffle=False,
-    #             validation_split=0.1,
-    #             callbacks=[early_stopping])
-    #   model.reset_states()
+    #             shuffle=False)
+    #   model.reset_states() # reseting the state after the whole sequence has been processed
 
     # Make predictions
     print('Predicting')
     trainPredict = model.predict(trainX, batch_size=batch_size)
-    #model.reset_states()
+    model.reset_states()
     testPredict = model.predict(testX, batch_size=batch_size)
 
     # Invert predictions
