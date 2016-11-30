@@ -9,6 +9,7 @@ import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.layers import GRU
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
@@ -21,17 +22,15 @@ def symbol_to_path(symbol, base_dir="data"):
   return os.path.join(base_dir, "{}.csv".format(str(symbol)))
 
 
-def get_data(symbols, dates):
+def get_data(symbols, dates, usecols=['Date', 'Adj Close']):
   """Read stock data (adjusted close) for given symbols from CSV files."""
   df = pd.DataFrame(index=dates)
-  if 'SPY' not in symbols:  # add SPY for reference, if absent
-      symbols.insert(0, 'SPY')
-
   for symbol in symbols:
       df_temp = pd.read_csv(symbol_to_path(symbol), index_col='Date',
-                            parse_dates=True, usecols=['Date', 'Adj Close'],
+                            parse_dates=True, usecols=usecols,
                             na_values=['nan'])
-      df_temp = df_temp.rename(columns={'Adj Close': symbol})
+      if 'Adj Close' in usecols:
+        df_temp = df_temp.rename(columns={'Adj Close': symbol})
       df = df.join(df_temp)
       if symbol == 'SPY':
           df = df.dropna(subset=['SPY'])
@@ -63,6 +62,16 @@ def create_dataset(df, look_back=1):
 
 def main():
 
+    # dates = pd.date_range('2014-01-01', '2015-01-01')
+    # df1 = get_data(['AAPL'], dates)
+    # df2 = get_data(['AOS-AAPL'], dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+    # df2.ix[:,0] = df2.ix[:,0] * 100.0
+
+    # df = df1.join(df2)
+    # df.plot(title='AAPL', label='AAPL')
+    # plt.show()
+    # return
+
     # Define a date range
     dates = pd.date_range('2006-11-29', '2016-11-28')
 
@@ -72,25 +81,25 @@ def main():
     # params
     tsteps = 21
     batch_size = 1
-    epochs = 30
+    epochs = 5
 
     # Get stock data
     df = get_data(symbols, dates)
 
     # Making df to be devisible by batch size (to use with statefull LSTMs)
-    df_offset = (len(df) - 2 * tsteps ) % batch_size
-    df = df.ix[df_offset:]
+    # df_offset = (len(df) - 2 * tsteps ) % batch_size
+    # df = df.ix[df_offset:]
 
     # Normalize the dataset    
     dataset = df.values
     dataset = dataset.astype('float32')
     
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler = MinMaxScaler(feature_range=(-.5, .5))
     dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
-    train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
-    #train_size = int(len(dataset) * 0.8)
+    # train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
+    train_size = int(len(dataset) * 0.9)
     test_size = len(dataset) - train_size
     train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
     print('Train set:', len(train), ', test set:', len(test))
@@ -104,16 +113,14 @@ def main():
     testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 
     # Create and fit the LSTM network
-    print('Creating Model')
+    print('Creating Model...')
     model = Sequential()
-    model.add(LSTM(32,
-                   input_shape=(tsteps, 1),
-                   return_sequences=False,
-                   stateful=False))
-    # model.add(LSTM(4,
-    #                return_sequences=False,
-    #                stateful=True))
+    model.add(GRU(32,
+                  input_shape=(tsteps, 1),
+                  return_sequences=False))
+    model.add(Dropout(0.2)) # 20% dropout
     model.add(Dense(1))
+    model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
     model.compile(loss='mse', optimizer='rmsprop')
 
@@ -137,9 +144,9 @@ def main():
     #   model.reset_states() # reseting the state after the whole sequence has been processed
 
     # Make predictions
-    print('Predicting')
+    print('Predicting...')
     trainPredict = model.predict(trainX, batch_size=batch_size)
-    model.reset_states()
+    # model.reset_states()
     testPredict = model.predict(testX, batch_size=batch_size)
 
     # Invert predictions
@@ -165,11 +172,20 @@ def main():
     testPredictPlot[:, :] = np.nan
     testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict
     test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test dataset'])
-    
+
     # Plot baseline and predictions
+    df = df.ix[-test_size:]
+    train_df = train_df.ix[-test_size:]
+    test_df = test_df.ix[-test_size:]
+
     ax = df.plot(title='SPY 1-day prediction', label='SPY')
     train_df.plot(label='Training dataset', ax=ax)
     test_df.plot(label='Test dataset', ax=ax)
+
+    # Calculate accuracy as Mean absolute percentage error
+    mape_accuracy_df = pd.DataFrame(data=(abs(df.values-test_df.values)/df.values*100), index=df.index.values, columns=['Error'])
+    print ('Mean absolute percentage error:', mape_accuracy_df['Error'].mean())
+    mape_accuracy_df.plot(title='Prediction error, %', label='Error')
 
     plt.show()
 
