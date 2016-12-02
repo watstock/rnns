@@ -17,23 +17,22 @@ from keras.callbacks import EarlyStopping
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 
+# fixing random generator
+np.random.seed(1234)
+
 def symbol_to_path(symbol, base_dir="data"):
   """Return CSV file path given ticker symbol."""
   return os.path.join(base_dir, "{}.csv".format(str(symbol)))
 
 
-def get_data(symbols, dates, usecols=['Date', 'Adj Close']):
+def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
   """Read stock data (adjusted close) for given symbols from CSV files."""
   df = pd.DataFrame(index=dates)
-  for symbol in symbols:
-      df_temp = pd.read_csv(symbol_to_path(symbol), index_col='Date',
-                            parse_dates=True, usecols=usecols,
-                            na_values=['nan'])
-      if 'Adj Close' in usecols:
-        df_temp = df_temp.rename(columns={'Adj Close': symbol})
-      df = df.join(df_temp)
-      if symbol == 'SPY':
-          df = df.dropna(subset=['SPY'])
+
+  df_temp = pd.read_csv(symbol_to_path(symbol), index_col='Date',
+                        parse_dates=True, usecols=usecols,
+                        na_values=['nan'])
+  df = df.join(df_temp)
 
   return df
 
@@ -56,16 +55,18 @@ def create_dataset(df, look_back=1):
   """Converts a dataframe of values into a matrix"""
   dataX, dataY = [], []
   for i in range(len(df)-look_back):
-    dataX.append(df[i:(i+look_back), 0])
-    dataY.append(df[i + look_back, 0])
+    dataX.append(df[i:(i+look_back), :])
+    dataY.append(df[i + look_back, :])
   return np.array(dataX), np.array(dataY)
 
 def main():
 
     # dates = pd.date_range('2014-01-01', '2015-01-01')
-    # df1 = get_data(['AAPL'], dates)
-    # df2 = get_data(['AOS-AAPL'], dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-    # df2.ix[:,0] = df2.ix[:,0] * 100.0
+    # df1 = get_data('AAPL', dates)
+    # df1 = df1.dropna()
+    # df2 = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+    # print(df2['Article Sentiment'].mean())
+    # df2.ix[:,0] = df2.ix[:,0] / 2 * 100.0 + 50.0
 
     # df = df1.join(df2)
     # df.plot(title='AAPL', label='AAPL')
@@ -73,18 +74,20 @@ def main():
     # return
 
     # Define a date range
-    dates = pd.date_range('2006-11-29', '2016-11-28')
+    dates = pd.date_range('2006-11-30', '2016-11-28')
 
-    # Choose stock symbols to read
-    symbols = ['SPY']
-    
     # params
     tsteps = 21
+    features = 2
     batch_size = 1
-    epochs = 5
+    epochs = 100
+    testset_ratio = 0.5
 
     # Get stock data
-    df = get_data(symbols, dates)
+    symbol = 'AAPL'
+    df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
+    #df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
+    df = df.dropna()
 
     # Making df to be devisible by batch size (to use with statefull LSTMs)
     # df_offset = (len(df) - 2 * tsteps ) % batch_size
@@ -94,12 +97,12 @@ def main():
     dataset = df.values
     dataset = dataset.astype('float32')
     
-    scaler = MinMaxScaler(feature_range=(-.5, .5))
+    scaler = MinMaxScaler(feature_range=(0, 1))
     dataset = scaler.fit_transform(dataset)
 
     # Split into train and test sets
     # train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
-    train_size = int(len(dataset) * 0.9)
+    train_size = int(len(dataset) * (1 - testset_ratio))
     test_size = len(dataset) - train_size
     train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
     print('Train set:', len(train), ', test set:', len(test))
@@ -109,16 +112,23 @@ def main():
     testX, testY = create_dataset(test, tsteps)
 
     # Reshape input to be [samples, time steps, features], currently we have [samples, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], trainX.shape[2]))
+    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], testX.shape[2]))
+
+    # Using just Adj close for prediction
+    trainYClose = trainY[:,-1:]
+    testYClose = testY[:,-1:]
 
     # Create and fit the LSTM network
     print('Creating Model...')
     model = Sequential()
-    model.add(GRU(32,
-                  input_shape=(tsteps, 1),
+    model.add(GRU(20,
+                  input_shape=(tsteps, features),
                   return_sequences=False))
-    model.add(Dropout(0.2)) # 20% dropout
+    #model.add(Dropout(0.2)) # 20% dropout
+    # model.add(GRU(20,
+    #               return_sequences=False))
+    #model.add(Dropout(0.2)) # 20% dropout
     model.add(Dense(1))
     model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
@@ -127,7 +137,7 @@ def main():
     print('Training...')
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
     model.fit(trainX, 
-              trainY, 
+              trainYClose, 
               batch_size=batch_size, 
               nb_epoch=epochs,
               verbose=1,
@@ -150,42 +160,56 @@ def main():
     testPredict = model.predict(testX, batch_size=batch_size)
 
     # Invert predictions
-    trainPredict = scaler.inverse_transform(trainPredict)
-    trainY = scaler.inverse_transform([trainY])
-    testPredict = scaler.inverse_transform(testPredict)
-    testY = scaler.inverse_transform([testY])
+    trainPredictDataset = np.empty((trainX.shape[0], trainX.shape[2]))
+    trainPredictDataset[:,:] = .0
+    trainPredictDataset[:,-1:] = trainPredict
+    trainPredict = scaler.inverse_transform(trainPredictDataset)
+    trainPredict[:,:-1] = np.nan
+    trainY = scaler.inverse_transform(trainY)
+
+    testPredictDataset = np.empty((testX.shape[0], testX.shape[2]))
+    testPredictDataset[:,:] = .0
+    testPredictDataset[:,-1:] = testPredict
+    testPredict = scaler.inverse_transform(testPredictDataset)
+    testPredict[:,:-1] = np.nan
+    testY = scaler.inverse_transform(testY)
 
     # Calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+    trainScore = math.sqrt(mean_squared_error(trainY[:,-1], trainPredict[:,-1]))
     print('Train Score: %.4f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
+    testScore = math.sqrt(mean_squared_error(testY[:,-1], testPredict[:,-1]))
     print('Test Score: %.4f RMSE' % (testScore))
 
     # Shift train predictions for plotting
-    trainPredictPlot = np.empty_like(dataset)
+    trainPredictPlot = np.empty((dataset.shape[0], 1))
     trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict
-    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training dataset'])
+    trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict[:,-1:]
+    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training prediction'])
 
     # Shift test predictions for plotting
-    testPredictPlot = np.empty_like(dataset)
+    testPredictPlot = np.empty((dataset.shape[0], 1))
     testPredictPlot[:, :] = np.nan
-    testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict
-    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test dataset'])
+    testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict[:,-1:]
+    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test prediction'])
+
+    # Calculate accuracy as Mean absolute percentage error
+    train_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-train_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
+    print ('Train Mean Absolute Percentage Error:', train_accuracy_df['Error'].mean())
+
+    test_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-test_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
+    print ('Test Mean Absolute Percentage Error:', test_accuracy_df['Error'].mean())
 
     # Plot baseline and predictions
     df = df.ix[-test_size:]
     train_df = train_df.ix[-test_size:]
     test_df = test_df.ix[-test_size:]
 
-    ax = df.plot(title='SPY 1-day prediction', label='SPY')
-    train_df.plot(label='Training dataset', ax=ax)
-    test_df.plot(label='Test dataset', ax=ax)
-
-    # Calculate accuracy as Mean absolute percentage error
-    mape_accuracy_df = pd.DataFrame(data=(abs(df.values-test_df.values)/df.values*100), index=df.index.values, columns=['Error'])
-    print ('Mean absolute percentage error:', mape_accuracy_df['Error'].mean())
-    mape_accuracy_df.plot(title='Prediction error, %', label='Error')
+    price_df = df[['Adj Close']]
+    price_df = price_df.rename(columns={'Adj Close': symbol})
+    ax = price_df.plot(title='1-day prediction', fontsize=12)
+    ax.set_ylabel('Price')
+    # train_df.plot(label='Training prediction', ax=ax)
+    test_df.plot(label='Test prediction', ax=ax)
 
     plt.show()
 
