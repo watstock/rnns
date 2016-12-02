@@ -78,16 +78,24 @@ def main():
 
     # params
     tsteps = 21
-    features = 2
     batch_size = 1
     epochs = 100
     testset_ratio = 0.5
+    symbol = 'AAPL'
 
     # Get stock data
-    symbol = 'AAPL'
     df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
-    #df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
     df = df.dropna()
+
+    # Convert dates to day of year to track periodical deviations and join to df
+    df_dayofyear = pd.to_datetime(df.index.values).dayofyear
+    dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
+    df = df.join(dayofyear_df)
+
+    # Reordering columns so Ads Close is the last
+    df = df[['Day of year', 'Volume', 'Adj Close']]
+
+    features = df.shape[1]
 
     # Making df to be devisible by batch size (to use with statefull LSTMs)
     # df_offset = (len(df) - 2 * tsteps ) % batch_size
@@ -122,7 +130,7 @@ def main():
     # Create and fit the LSTM network
     print('Creating Model...')
     model = Sequential()
-    model.add(GRU(20,
+    model.add(GRU(40,
                   input_shape=(tsteps, features),
                   return_sequences=False))
     #model.add(Dropout(0.2)) # 20% dropout
@@ -184,13 +192,13 @@ def main():
     trainPredictPlot = np.empty((dataset.shape[0], 1))
     trainPredictPlot[:, :] = np.nan
     trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict[:,-1:]
-    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training prediction'])
+    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training set prediction'])
 
     # Shift test predictions for plotting
     testPredictPlot = np.empty((dataset.shape[0], 1))
     testPredictPlot[:, :] = np.nan
     testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict[:,-1:]
-    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test prediction'])
+    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test set prediction'])
 
     # Calculate accuracy as Mean absolute percentage error
     train_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-train_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
@@ -208,8 +216,8 @@ def main():
     price_df = price_df.rename(columns={'Adj Close': symbol})
     ax = price_df.plot(title='1-day prediction', fontsize=12)
     ax.set_ylabel('Price')
-    # train_df.plot(label='Training prediction', ax=ax)
-    test_df.plot(label='Test prediction', ax=ax)
+    # train_df.plot(label='Training set prediction', ax=ax)
+    test_df.plot(label='Test set prediction', ax=ax)
 
     plt.show()
 
