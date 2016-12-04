@@ -75,7 +75,7 @@ def main():
 
   # Define a date range
   #dates = pd.date_range('2014-01-01', '2015-01-01') # AOS sentiment test data
-  dates = pd.date_range('2006-11-30', '2016-11-28')
+  dates = pd.date_range('2001-12-02', '2016-12-02')
 
   # params
   tsteps = 21
@@ -150,7 +150,7 @@ def main():
   model.compile(loss='mse', optimizer='rmsprop')
 
   print('Training...')
-  early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0)
+  early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
   model.fit(trainX, 
             trainYClose, 
             batch_size=batch_size, 
