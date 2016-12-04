@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import math
 
 from keras.models import Sequential
@@ -36,12 +36,12 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 
   return df
 
-def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
-  """Plot stock prices with a custom title and meaningful axis labels."""
-  ax = df.plot(title=title, fontsize=12)
-  ax.set_xlabel(xlabel)
-  ax.set_ylabel(ylabel)
-  plt.show()
+# def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
+#   """Plot stock prices with a custom title and meaningful axis labels."""
+#   ax = df.plot(title=title, fontsize=12)
+#   ax.set_xlabel(xlabel)
+#   ax.set_ylabel(ylabel)
+#   plt.show()
 
 def compute_daily_returns(df):
   """Compute and return the daily return values."""
@@ -61,165 +61,172 @@ def create_dataset(df, look_back=1):
 
 def main():
 
-    # dates = pd.date_range('2014-01-01', '2015-01-01')
-    # df1 = get_data('AAPL', dates)
-    # df1 = df1.dropna()
-    # df2 = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-    # print(df2['Article Sentiment'].mean())
-    # df2.ix[:,0] = df2.ix[:,0] / 2 * 100.0 + 50.0
+  # dates = pd.date_range('2014-01-01', '2015-01-01')
+  # df1 = get_data('AAPL', dates)
+  # df1 = df1.dropna()
+  # df2 = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  # print(df2['Article Sentiment'].mean())
+  # df2.ix[:,0] = df2.ix[:,0] / 2 * 100.0 + 50.0
 
-    # df = df1.join(df2)
-    # df.plot(title='AAPL', label='AAPL')
-    # plt.show()
-    # return
+  # df = df1.join(df2)
+  # df.plot(title='AAPL', label='AAPL')
+  # plt.show()
+  # return
 
-    # Define a date range
-    dates = pd.date_range('2006-11-30', '2016-11-28')
+  # Define a date range
+  dates = pd.date_range('2014-01-01', '2015-01-01') # AOS sentiment test data
+  #dates = pd.date_range('2006-11-30', '2016-11-28')
 
-    # params
-    tsteps = 21
-    batch_size = 1
-    epochs = 100
-    testset_ratio = 0.5
-    symbol = 'AAPL'
+  # params
+  tsteps = 21
+  batch_size = 1
+  epochs = 100
+  testset_ratio = 0.5
+  symbol = 'AAPL'
 
-    # Get stock data
-    df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
-    df = df.dropna()
+  # Get stock data
+  df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
+  df = df.dropna()
 
-    # Convert dates to day of year to track periodical deviations and join to df
-    df_dayofyear = pd.to_datetime(df.index.values).dayofyear
-    dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
-    df = df.join(dayofyear_df)
+  # Add sentiment data
+  df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  df = df.join(df_sentiment)
 
-    # Reordering columns so Ads Close is the last
-    df = df[['Day of year', 'Volume', 'Adj Close']]
+  # Add day of year data
+  # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
+  # dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
+  # df = df.join(dayofyear_df)
 
-    features = df.shape[1]
+  # Reordering columns so Ads Close is the last
+  #df = df[['Day of year', 'Volume', 'Adj Close']]
+  df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
 
-    # Making df to be devisible by batch size (to use with statefull LSTMs)
-    # df_offset = (len(df) - 2 * tsteps ) % batch_size
-    # df = df.ix[df_offset:]
+  features = df.shape[1]
+  print('Features:', features)
 
-    # Normalize the dataset    
-    dataset = df.values
-    dataset = dataset.astype('float32')
-    
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    dataset = scaler.fit_transform(dataset)
+  # Making df to be devisible by batch size (to use with statefull LSTMs)
+  # df_offset = (len(df) - 2 * tsteps ) % batch_size
+  # df = df.ix[df_offset:]
 
-    # Split into train and test sets
-    # train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
-    train_size = int(len(dataset) * (1 - testset_ratio))
-    test_size = len(dataset) - train_size
-    train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
-    print('Train set:', len(train), ', test set:', len(test))
+  # Normalize the dataset    
+  dataset = df.values
+  dataset = dataset.astype('float32')
+  
+  scaler = MinMaxScaler(feature_range=(0, 1))
+  dataset = scaler.fit_transform(dataset)
 
-    # Reshape into X=t and Y=t+1
-    trainX, trainY = create_dataset(train, tsteps)
-    testX, testY = create_dataset(test, tsteps)
+  # Split into train and test sets
+  # train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
+  train_size = int(len(dataset) * (1 - testset_ratio))
+  test_size = len(dataset) - train_size
+  train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+  print('Train set:', len(train), ', test set:', len(test))
 
-    # Reshape input to be [samples, time steps, features], currently we have [samples, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], trainX.shape[2]))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], testX.shape[2]))
+  # Reshape into X=t and Y=t+1
+  trainX, trainY = create_dataset(train, tsteps)
+  testX, testY = create_dataset(test, tsteps)
 
-    # Using just Adj close for prediction
-    trainYClose = trainY[:,-1:]
-    testYClose = testY[:,-1:]
+  # Reshape input to be [samples, time steps, features], currently we have [samples, features]
+  trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], trainX.shape[2]))
+  testX = np.reshape(testX, (testX.shape[0], testX.shape[1], testX.shape[2]))
 
-    # Create and fit the LSTM network
-    print('Creating Model...')
-    model = Sequential()
-    model.add(GRU(40,
-                  input_shape=(tsteps, features),
-                  return_sequences=False))
-    #model.add(Dropout(0.2)) # 20% dropout
-    # model.add(GRU(20,
-    #               return_sequences=False))
-    #model.add(Dropout(0.2)) # 20% dropout
-    model.add(Dense(1))
-    model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
+  # Using just Adj close for prediction
+  trainYClose = trainY[:,-1:]
+  testYClose = testY[:,-1:]
 
-    model.compile(loss='mse', optimizer='rmsprop')
+  # Create and fit the LSTM network
+  print('Creating Model...')
+  model = Sequential()
+  model.add(GRU(500,
+                input_shape=(tsteps, features),
+                return_sequences=False))
+  #model.add(Dropout(0.2)) # 20% dropout
+  # model.add(GRU(40,
+  #               return_sequences=False))
+  #model.add(Dropout(0.2)) # 20% dropout
+  model.add(Dense(1))
+  model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
-    print('Training...')
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
-    model.fit(trainX, 
-              trainYClose, 
-              batch_size=batch_size, 
-              nb_epoch=epochs,
-              verbose=1,
-              validation_split=0.1, 
-              callbacks=[early_stopping])
-    # for i in xrange(epochs):
-    #   print('Epoch', i, '/', epochs)
-    #   model.fit(trainX, 
-    #             trainY, 
-    #             batch_size=batch_size,
-    #             verbose=1,
-    #             nb_epoch=1, 
-    #             shuffle=False)
-    #   model.reset_states() # reseting the state after the whole sequence has been processed
+  model.compile(loss='mse', optimizer='rmsprop')
 
-    # Make predictions
-    print('Predicting...')
-    trainPredict = model.predict(trainX, batch_size=batch_size)
-    # model.reset_states()
-    testPredict = model.predict(testX, batch_size=batch_size)
+  print('Training...')
+  early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0)
+  model.fit(trainX, 
+            trainYClose, 
+            batch_size=batch_size, 
+            nb_epoch=epochs,
+            verbose=1,
+            validation_split=0.1, 
+            callbacks=[early_stopping])
+  # for i in xrange(epochs):
+  #   print('Epoch', i, '/', epochs)
+  #   model.fit(trainX, 
+  #             trainY, 
+  #             batch_size=batch_size,
+  #             verbose=1,
+  #             nb_epoch=1, 
+  #             shuffle=False)
+  #   model.reset_states() # reseting the state after the whole sequence has been processed
 
-    # Invert predictions
-    trainPredictDataset = np.empty((trainX.shape[0], trainX.shape[2]))
-    trainPredictDataset[:,:] = .0
-    trainPredictDataset[:,-1:] = trainPredict
-    trainPredict = scaler.inverse_transform(trainPredictDataset)
-    trainPredict[:,:-1] = np.nan
-    trainY = scaler.inverse_transform(trainY)
+  # Make predictions
+  print('Predicting...')
+  trainPredict = model.predict(trainX, batch_size=batch_size)
+  # model.reset_states()
+  testPredict = model.predict(testX, batch_size=batch_size)
 
-    testPredictDataset = np.empty((testX.shape[0], testX.shape[2]))
-    testPredictDataset[:,:] = .0
-    testPredictDataset[:,-1:] = testPredict
-    testPredict = scaler.inverse_transform(testPredictDataset)
-    testPredict[:,:-1] = np.nan
-    testY = scaler.inverse_transform(testY)
+  # Invert predictions
+  trainPredictDataset = np.empty((trainX.shape[0], trainX.shape[2]))
+  trainPredictDataset[:,:] = .0
+  trainPredictDataset[:,-1:] = trainPredict
+  trainPredict = scaler.inverse_transform(trainPredictDataset)
+  trainPredict[:,:-1] = np.nan
+  trainY = scaler.inverse_transform(trainY)
 
-    # Calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(trainY[:,-1], trainPredict[:,-1]))
-    print('Train Score: %.4f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(testY[:,-1], testPredict[:,-1]))
-    print('Test Score: %.4f RMSE' % (testScore))
+  testPredictDataset = np.empty((testX.shape[0], testX.shape[2]))
+  testPredictDataset[:,:] = .0
+  testPredictDataset[:,-1:] = testPredict
+  testPredict = scaler.inverse_transform(testPredictDataset)
+  testPredict[:,:-1] = np.nan
+  testY = scaler.inverse_transform(testY)
 
-    # Shift train predictions for plotting
-    trainPredictPlot = np.empty((dataset.shape[0], 1))
-    trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict[:,-1:]
-    train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training set prediction'])
+  # Calculate root mean squared error
+  trainScore = math.sqrt(mean_squared_error(trainY[:,-1], trainPredict[:,-1]))
+  print('Train Score: %.4f RMSE' % (trainScore))
+  testScore = math.sqrt(mean_squared_error(testY[:,-1], testPredict[:,-1]))
+  print('Test Score: %.4f RMSE' % (testScore))
 
-    # Shift test predictions for plotting
-    testPredictPlot = np.empty((dataset.shape[0], 1))
-    testPredictPlot[:, :] = np.nan
-    testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict[:,-1:]
-    test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test set prediction'])
+  # Shift train predictions for plotting
+  trainPredictPlot = np.empty((dataset.shape[0], 1))
+  trainPredictPlot[:, :] = np.nan
+  trainPredictPlot[tsteps:len(trainPredict) + tsteps, :] = trainPredict[:,-1:]
+  train_df = pd.DataFrame(data=trainPredictPlot, index=df.index.values, columns=['Training set prediction'])
 
-    # Calculate accuracy as Mean absolute percentage error
-    train_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-train_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
-    print ('Train Mean Absolute Percentage Error:', train_accuracy_df['Error'].mean())
+  # Shift test predictions for plotting
+  testPredictPlot = np.empty((dataset.shape[0], 1))
+  testPredictPlot[:, :] = np.nan
+  testPredictPlot[len(trainPredict) + 2*tsteps:len(dataset), :] = testPredict[:,-1:]
+  test_df = pd.DataFrame(data=testPredictPlot, index=df.index.values, columns=['Test set prediction'])
 
-    test_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-test_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
-    print ('Test Mean Absolute Percentage Error:', test_accuracy_df['Error'].mean())
+  # Calculate accuracy as Mean absolute percentage error
+  train_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-train_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
+  print ('Train Mean Absolute Percentage Error:', train_accuracy_df['Error'].mean())
 
-    # Plot baseline and predictions
-    df = df.ix[-test_size:]
-    train_df = train_df.ix[-test_size:]
-    test_df = test_df.ix[-test_size:]
+  test_accuracy_df = pd.DataFrame(data=(abs(df.values[:,-1:]-test_df.values)/df.values[:,-1:]*100), index=df.index.values, columns=['Error'])
+  print ('Test Mean Absolute Percentage Error:', test_accuracy_df['Error'].mean())
 
-    price_df = df[['Adj Close']]
-    price_df = price_df.rename(columns={'Adj Close': symbol})
-    ax = price_df.plot(title='1-day prediction', fontsize=12)
-    ax.set_ylabel('Price')
-    # train_df.plot(label='Training set prediction', ax=ax)
-    test_df.plot(label='Test set prediction', ax=ax)
+  # Plot baseline and predictions
+  # df = df.ix[-test_size:]
+  # train_df = train_df.ix[-test_size:]
+  # test_df = test_df.ix[-test_size:]
 
-    plt.show()
+  # price_df = df[['Adj Close']]
+  # price_df = price_df.rename(columns={'Adj Close': symbol})
+  # ax = price_df.plot(title='1-day prediction', fontsize=12)
+  # ax.set_ylabel('Price')
+  # # train_df.plot(label='Training set prediction', ax=ax)
+  # test_df.plot(label='Test set prediction', ax=ax)
+
+  # plt.show()
 
 if __name__ == "__main__":
-    main()
+  main()
