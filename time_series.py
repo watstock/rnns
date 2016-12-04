@@ -3,8 +3,9 @@ from __future__ import print_function
 import os
 import numpy as np
 import pandas as pd
-#import matplotlib.pyplot as plt
 import math
+
+# import matplotlib.pyplot as plt
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -78,7 +79,7 @@ def main():
   dates = pd.date_range('2001-12-02', '2016-12-02')
 
   # params
-  tsteps = 50
+  tsteps = 21
   batch_size = 1
   epochs = 100
   testset_ratio = 0.2
@@ -137,12 +138,12 @@ def main():
   # Create and fit the LSTM network
   print('Creating Model...')
   model = Sequential()
-  model.add(GRU(400,
+  model.add(GRU(50,
                 input_shape=(tsteps, features),
-                return_sequences=False))
+                return_sequences=True))
   #model.add(Dropout(0.2)) # 20% dropout
-  # model.add(GRU(40,
-  #               return_sequences=False))
+  model.add(GRU(100,
+                return_sequences=False))
   #model.add(Dropout(0.2)) # 20% dropout
   model.add(Dense(1))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
