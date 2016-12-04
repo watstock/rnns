@@ -79,7 +79,7 @@ def main():
   dates = pd.date_range('2001-12-02', '2016-12-02')
 
   # params
-  tsteps = 21
+  tsteps = 50
   batch_size = 1
   epochs = 100
   testset_ratio = 0.2
