@@ -74,8 +74,8 @@ def main():
   # return
 
   # Define a date range
-  dates = pd.date_range('2014-01-01', '2015-01-01') # AOS sentiment test data
-  #dates = pd.date_range('2006-11-30', '2016-11-28')
+  #dates = pd.date_range('2014-01-01', '2015-01-01') # AOS sentiment test data
+  dates = pd.date_range('2006-11-30', '2016-11-28')
 
   # params
   tsteps = 21
@@ -89,8 +89,8 @@ def main():
   df = df.dropna()
 
   # Add sentiment data
-  df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-  df = df.join(df_sentiment)
+  # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  # df = df.join(df_sentiment)
 
   # Add day of year data
   # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
@@ -99,7 +99,7 @@ def main():
 
   # Reordering columns so Ads Close is the last
   #df = df[['Day of year', 'Volume', 'Adj Close']]
-  df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
+  # df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
 
   features = df.shape[1]
   print('Features:', features)
@@ -137,7 +137,7 @@ def main():
   # Create and fit the LSTM network
   print('Creating Model...')
   model = Sequential()
-  model.add(GRU(500,
+  model.add(GRU(100,
                 input_shape=(tsteps, features),
                 return_sequences=False))
   #model.add(Dropout(0.2)) # 20% dropout
