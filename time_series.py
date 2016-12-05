@@ -141,10 +141,10 @@ def main():
   model.add(GRU(400,
                 input_shape=(tsteps, features),
                 return_sequences=True))
-  #model.add(Dropout(0.2)) # 20% dropout
+  model.add(Dropout(0.2)) # 20% dropout
   model.add(GRU(300,
                 return_sequences=False))
-  #model.add(Dropout(0.2)) # 20% dropout
+  model.add(Dropout(0.2)) # 20% dropout
   model.add(Dense(1))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
