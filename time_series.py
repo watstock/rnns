@@ -79,7 +79,7 @@ def main():
   dates = pd.date_range('2001-12-02', '2016-12-02')
 
   # params
-  tsteps = 50
+  tsteps = 90
   batch_size = 1
   epochs = 100
   testset = 30
@@ -139,7 +139,7 @@ def main():
   # Create and fit the LSTM network
   print('Creating Model...')
   model = Sequential()
-  model.add(GRU(100,
+  model.add(GRU(200,
                 input_shape=(tsteps, features),
                 return_sequences=False))
   # model.add(Dropout(0.2)) # 20% dropout
