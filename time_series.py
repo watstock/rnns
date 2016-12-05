@@ -82,7 +82,7 @@ def main():
   tsteps = 50
   batch_size = 1
   epochs = 100
-  testset_ratio = 0.2
+  testset_ratio = 0.5
   symbol = 'AAPL'
 
   # Get stock data
@@ -138,13 +138,13 @@ def main():
   # Create and fit the LSTM network
   print('Creating Model...')
   model = Sequential()
-  model.add(GRU(400,
+  model.add(GRU(100,
                 input_shape=(tsteps, features),
-                return_sequences=True))
-  model.add(Dropout(0.2)) # 20% dropout
-  model.add(GRU(300,
                 return_sequences=False))
-  model.add(Dropout(0.2)) # 20% dropout
+  # model.add(Dropout(0.2)) # 20% dropout
+  # model.add(GRU(300,
+  #               return_sequences=False))
+  # model.add(Dropout(0.2)) # 20% dropout
   model.add(Dense(1))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
