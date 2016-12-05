@@ -82,7 +82,7 @@ def main():
   tsteps = 50
   batch_size = 1
   epochs = 100
-  testset_ratio = 0.2
+  testset = 30
   symbol = 'AAPL'
 
   # Get stock data
@@ -118,6 +118,7 @@ def main():
 
   # Split into train and test sets
   # train_size = (int((len(dataset) - 2 * tsteps) * 0.9) // batch_size) * batch_size + tsteps
+  testset_ratio = 1.0 * (testset + tsteps)/len(dataset)
   train_size = int(len(dataset) * (1 - testset_ratio))
   test_size = len(dataset) - train_size
   train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
