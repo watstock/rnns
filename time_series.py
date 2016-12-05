@@ -138,7 +138,7 @@ def main():
   # Create and fit the LSTM network
   print('Creating Model...')
   model = Sequential()
-  model.add(GRU(100,
+  model.add(GRU(200,
                 input_shape=(tsteps, features),
                 return_sequences=False))
   # model.add(Dropout(0.2)) # 20% dropout
