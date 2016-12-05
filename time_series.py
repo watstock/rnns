@@ -82,7 +82,7 @@ def main():
   tsteps = 50
   batch_size = 1
   epochs = 100
-  testset_ratio = 0.5
+  testset_ratio = 0.2
   symbol = 'AAPL'
 
   # Get stock data
