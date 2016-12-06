@@ -58,8 +58,8 @@ def split_dataset(dataframe, timesteps=90, testset=30):
 def build_model(layers, sequence_length):
   model = Sequential()
 
-  for i in xrange(len(layers) - 1):
-    return_sequences = i < len(layers) - 2
+  for i in xrange(len(layers) - 2):
+    return_sequences = i < len(layers) - 3
     layer = None
     if i == 0:
       layer = GRU(layers[i+1],
@@ -142,7 +142,6 @@ def main():
   print('Date to:', date_to)
   print('Time steps:', tsteps)
   print('Test set:', testset)
-  print('Layers:', layers)
 
   # Define a date range
   dates = pd.date_range(date_from, date_to)
