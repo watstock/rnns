@@ -127,7 +127,7 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 def main():
 
   # params
-  symbol = 'NVDA'
+  symbol = 'NFLX'
   date_from = '2006-12-05'
   date_to = '2016-12-05'
   tsteps = 90
