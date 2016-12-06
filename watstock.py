@@ -128,7 +128,7 @@ def main():
 
   # params
   symbol = 'AAPL'
-  date_from = '2006-12-02'
+  date_from = '2001-12-02'
   date_to = '2016-12-02'
   tsteps = 60
   testset = 30
@@ -210,24 +210,6 @@ def main():
   df_shape = np.zeros((X_test.shape[0], X_test.shape[2]))
   df_shape[:,-1:] = Y_test
   Y_test = scaler.inverse_transform(df_shape)[:,-1]
-
-  # Calculate root mean squared error
-  # trainScore = math.sqrt(mean_squared_error(Y_train, Y_train_prediction))
-  # testScore = math.sqrt(mean_squared_error(Y_test, Y_test_prediction))
-  # print('Train Score: %.4f RMSE' % (trainScore))
-  # print('Test Score: %.4f RMSE' % (testScore))
-
-  # Shift train predictions for plotting
-  # train_ds = np.empty((dataset.shape[0], 1))
-  # train_ds[:, :] = np.nan
-  # train_ds[tsteps:Y_train_prediction.shape[0] + tsteps, :] = Y_train_prediction
-  # train_df = pd.DataFrame(data=train_ds, index=df.index.values, columns=['Training set prediction'])
-
-  # # Shift test predictions for plotting
-  # test_ds = np.empty((dataset.shape[0], 1))
-  # test_ds[:, :] = np.nan
-  # test_ds[Y_train_prediction.shape[0] + 2*tsteps:len(dataset), :] = Y_test_prediction
-  # test_df = pd.DataFrame(data=test_ds, index=df.index.values, columns=['Test set prediction'])
 
   # Calculate accuracy as Mean absolute percentage error
   train_error_ds = abs(Y_train - Y_train_prediction) / Y_train
