@@ -127,8 +127,8 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 def main():
 
   # params
-  symbol = 'MELI'
-  date_from = '2007-08-10'
+  symbol = 'GRPN'
+  date_from = '2011-11-04'
   date_to = '2016-12-05'
   tsteps = 90
   testset = 30
