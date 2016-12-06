@@ -89,7 +89,7 @@ def train_model(model, data, batch_size=1, epochs=100):
             batch_size=batch_size, 
             nb_epoch=epochs,
             verbose=1,
-            validation_split=0.01, 
+            validation_split=0.05, 
             callbacks=[early_stopping])
 
   return (time.time() - start_time)
@@ -127,7 +127,7 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 def main():
 
   # params
-  symbol = 'NFLX'
+  symbol = 'NVDA'
   date_from = '2006-12-05'
   date_to = '2016-12-05'
   tsteps = 90
