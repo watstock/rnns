@@ -89,7 +89,7 @@ def train_model(model, data, batch_size=1, epochs=100):
             batch_size=batch_size, 
             nb_epoch=epochs,
             verbose=1,
-            validation_split=0.1, 
+            validation_split=0.01, 
             callbacks=[early_stopping])
 
   return (time.time() - start_time)
@@ -128,8 +128,8 @@ def main():
 
   # params
   symbol = 'AAPL'
-  date_from = '2001-12-02'
-  date_to = '2016-12-02'
+  date_from = '2006-12-05'
+  date_to = '2016-12-05'
   tsteps = 90
   testset = 30
   layers = [300]
