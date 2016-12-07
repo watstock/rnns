@@ -140,8 +140,8 @@ def main():
   testset = 30
   layers = [300]
 
-  batch_size = 10
-  valset = 60
+  batch_size = 5
+  valset = 30
   epochs = 500
   dropout = None
 
