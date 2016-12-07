@@ -55,7 +55,7 @@ def split_dataset(dataframe, timesteps=90, testset=30):
 
   return X_train, Y_train, X_test, Y_test
 
-def build_model(layers, sequence_length):
+def build_model(layers, sequence_length, dropout=None):
   model = Sequential()
 
   for i in xrange(len(layers) - 2):
@@ -70,6 +70,10 @@ def build_model(layers, sequence_length):
                   return_sequences=return_sequences)
 
     model.add(layer)
+
+    # adding dropout
+    if dropout != None:
+      model.add(Dropout(dropout))
 
   model.add(Dense(layers[-1]))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
@@ -138,6 +142,7 @@ def main():
 
   batch_size = 10
   epochs = 500
+  dropout = 0.2
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
@@ -186,7 +191,7 @@ def main():
   architecture = [features] + layers + [1]
   print('Architecture:', architecture)
 
-  model = build_model(architecture, sequence_length=tsteps)
+  model = build_model(architecture, sequence_length=tsteps, dropout=dropout)
   train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs)
 
   # Make predictions
