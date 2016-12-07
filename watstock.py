@@ -143,7 +143,7 @@ def main():
   batch_size = 10
   valset = 30
   epochs = 500
-  dropout = 0.2
+  dropout = 0.5
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
