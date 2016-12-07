@@ -136,14 +136,14 @@ def main():
   symbol = 'AAPL'
   date_from = '2006-12-05'
   date_to = '2016-12-05'
-  tsteps = 20
+  tsteps = 15
   testset = 30
-  layers = [2000]
+  layers = [1000, 1000, 1000]
 
   batch_size = 10
   valset = 30
   epochs = 500
-  dropout = None
+  dropout = 0.5
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
