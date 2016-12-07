@@ -136,9 +136,9 @@ def main():
   symbol = 'AAPL'
   date_from = '2006-12-05'
   date_to = '2016-12-05'
-  tsteps = 15
+  tsteps = 30
   testset = 30
-  layers = [300, 300, 300]
+  layers = [300, 500, 300]
 
   batch_size = 10
   valset = 30
