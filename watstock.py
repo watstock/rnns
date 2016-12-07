@@ -127,8 +127,8 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 def main():
 
   # params
-  symbol = 'TSLA'
-  date_from = '2010-06-29'
+  symbol = 'AAPL'
+  date_from = '2006-12-05'
   date_to = '2016-12-05'
   tsteps = 90
   testset = 30
@@ -138,8 +138,6 @@ def main():
   epochs = 100
 
   print('Symbol:', symbol)
-  print('Date from:', date_from)
-  print('Date to:', date_to)
   print('Time steps:', tsteps)
   print('Test set:', testset)
 
@@ -147,9 +145,9 @@ def main():
   dates = pd.date_range(date_from, date_to)
 
   # Get stock data
-  df = get_data(symbol, dates, usecols=['Date', 'Volume', 'Adj Close'])
+  df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
   df = df.dropna()
-
+ 
   # Add sentiment data
   # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
   # df = df.join(df_sentiment)
@@ -163,12 +161,13 @@ def main():
   #df = df[['Day of year', 'Volume', 'Adj Close']]
   # df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
 
+  date_from = df.index[0].strftime('%Y-%m-%d')
+  date_to = df.index[-1].strftime('%Y-%m-%d')
+  print('Date from:', date_from)
+  print('Date to:', date_to)
+
   features = df.shape[1]
   print('Features:', features)
-
-  # Making df to be devisible by batch size (to use with statefull LSTMs)
-  # df_offset = (len(df) - 2 * tsteps ) % batch_size
-  # df = df.ix[df_offset:]
 
   # Normalize the dataset    
   dataset = df.values
@@ -225,6 +224,7 @@ def main():
     'train_set': len(X_train),
     'test_set': len(X_test),
     'dates': test_index.tolist(),
+    'features': print(df.columns.values),
     'price': Y_test.tolist(),
     'prediction': Y_test_prediction.tolist(),
     'sequence_length': tsteps,
