@@ -127,8 +127,8 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 def main():
 
   # params
-  symbol = 'FB'
-  date_from = '2012-05-18'
+  symbol = 'TSLA'
+  date_from = '2010-06-29'
   date_to = '2016-12-05'
   tsteps = 90
   testset = 30
