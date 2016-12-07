@@ -141,9 +141,9 @@ def main():
   layers = [1000]
 
   batch_size = 10
-  valset = 30
+  valset = 60
   epochs = 500
-  dropout = 0.5
+  dropout = None
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
