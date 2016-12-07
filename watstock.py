@@ -86,7 +86,7 @@ def build_model(layers, sequence_length, dropout=None):
 def train_model(model, data, batch_size=1, epochs=100, valset=30):
   X_train, Y_train = data
 
-  early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0)
+  early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
   val_ratio = 1.0 * valset / len(X_train)
 
   start_time = time.time()
