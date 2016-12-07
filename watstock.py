@@ -225,7 +225,7 @@ def main():
     'train_set': len(X_train),
     'test_set': len(X_test),
     'dates': test_index.tolist(),
-    'features': df.columns.values,
+    'features': df.columns.values.tolist(),
     'price': Y_test.tolist(),
     'prediction': Y_test_prediction.tolist(),
     'sequence_length': tsteps,
