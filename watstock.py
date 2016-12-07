@@ -133,7 +133,7 @@ def main():
   date_to = '2016-12-05'
   tsteps = 90
   testset = 30
-  layers = [300]
+  layers = [200]
 
   batch_size = 1
   epochs = 500
