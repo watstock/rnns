@@ -62,11 +62,11 @@ def build_model(layers, sequence_length, dropout=None):
     return_sequences = i < len(layers) - 3
     layer = None
     if i == 0:
-      layer = GRU(layers[i+1],
+      layer = LSTM(layers[i+1],
                   input_shape=(sequence_length, layers[i]),
                   return_sequences=return_sequences)
     else:
-      layer = GRU(layers[i+1],
+      layer = LSTM(layers[i+1],
                   return_sequences=return_sequences)
 
     model.add(layer)
@@ -140,7 +140,7 @@ def main():
   testset = 30
   layers = [300]
 
-  batch_size = 5
+  batch_size = 10
   valset = 30
   epochs = 500
   dropout = None
