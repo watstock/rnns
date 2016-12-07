@@ -138,12 +138,12 @@ def main():
   date_to = '2016-12-05'
   tsteps = 15
   testset = 30
-  layers = [300, 300, 100]
+  layers = [300, 300, 300]
 
   batch_size = 10
   valset = 30
   epochs = 500
-  dropout = 0.2
+  dropout = 0.5
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
