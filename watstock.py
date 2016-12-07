@@ -66,7 +66,8 @@ def build_model(layers, sequence_length):
                   input_shape=(sequence_length, layers[i]),
                   return_sequences=return_sequences)
     else:
-      layer = GRU(layers[i+1])
+      layer = GRU(layers[i+1],
+                  return_sequences=return_sequences)
 
     model.add(layer)
 
