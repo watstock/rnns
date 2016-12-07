@@ -78,10 +78,11 @@ def build_model(layers, sequence_length):
   return model
 
 
-def train_model(model, data, batch_size=1, epochs=100):
+def train_model(model, data, batch_size=1, epochs=100, valset=30):
   X_train, Y_train = data
 
   early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+  val_ratio = 1.0 * valset / len(X_train)
 
   start_time = time.time()
   model.fit(X_train, 
@@ -89,7 +90,7 @@ def train_model(model, data, batch_size=1, epochs=100):
             batch_size=batch_size, 
             nb_epoch=epochs,
             verbose=1,
-            validation_split=0.05, 
+            validation_split=val_ratio, 
             callbacks=[early_stopping])
 
   return (time.time() - start_time)
@@ -135,7 +136,7 @@ def main():
   layers = [300]
 
   batch_size = 1
-  epochs = 100
+  epochs = 500
 
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
@@ -167,7 +168,7 @@ def main():
   print('Date to:', date_to)
 
   features = df.shape[1]
-  print('Features:', features)
+  print('Features:', df.columns.values)
 
   # Normalize the dataset    
   dataset = df.values
@@ -224,7 +225,7 @@ def main():
     'train_set': len(X_train),
     'test_set': len(X_test),
     'dates': test_index.tolist(),
-    'features': print(df.columns.values),
+    'features': df.columns.values,
     'price': Y_test.tolist(),
     'prediction': Y_test_prediction.tolist(),
     'sequence_length': tsteps,
