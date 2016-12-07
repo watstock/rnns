@@ -148,6 +148,7 @@ def main():
   print('Symbol:', symbol)
   print('Time steps:', tsteps)
   print('Test set:', testset)
+  print('Batch size:', batch_size)
 
   # Define a date range
   dates = pd.date_range(date_from, date_to)
@@ -191,6 +192,7 @@ def main():
   # Create and fit the RNN
   architecture = [features] + layers + [1]
   print('Architecture:', architecture)
+  print('Dropout:', dropout)
 
   model = build_model(architecture, sequence_length=tsteps, dropout=dropout)
   train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs, valset=valset)
