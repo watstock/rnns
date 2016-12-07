@@ -136,7 +136,7 @@ def main():
   symbol = 'AAPL'
   date_from = '2006-12-05'
   date_to = '2016-12-05'
-  tsteps = 30
+  tsteps = 15
   testset = 30
   layers = [100, 100]
 
