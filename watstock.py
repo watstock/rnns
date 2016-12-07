@@ -133,9 +133,9 @@ def main():
   date_to = '2016-12-05'
   tsteps = 90
   testset = 30
-  layers = [200]
+  layers = [300]
 
-  batch_size = 1
+  batch_size = 10
   epochs = 500
 
   print('Symbol:', symbol)
