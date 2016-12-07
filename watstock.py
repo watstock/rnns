@@ -141,6 +141,7 @@ def main():
   layers = [300, 300, 100]
 
   batch_size = 10
+  valset = 30
   epochs = 500
   dropout = 0.2
 
@@ -192,7 +193,7 @@ def main():
   print('Architecture:', architecture)
 
   model = build_model(architecture, sequence_length=tsteps, dropout=dropout)
-  train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs)
+  train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs, valset=valset)
 
   # Make predictions
   print('Predicting...')
@@ -229,6 +230,7 @@ def main():
     'date_from': date_from,
     'date_to': date_to,
     'train_set': len(X_train),
+    'val_set': valset,
     'test_set': len(X_test),
     'dates': test_index.tolist(),
     'features': df.columns.values.tolist(),
@@ -236,9 +238,11 @@ def main():
     'prediction': Y_test_prediction.tolist(),
     'sequence_length': tsteps,
     'architecture': architecture,
+    'dropout': dropout,
     'train_accuracy': (1 - train_error_ds.mean()) * 100,
     'test_accuracy': (1 - test_error_df.mean()) * 100,
-    'train_duration': train_duration
+    'train_duration': train_duration,
+    'batch_size': batch_size
   }
 
   print(prediction)
