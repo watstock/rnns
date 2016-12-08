@@ -305,7 +305,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 5,
       'test_set': 30,
       'val_set': 30,
@@ -317,7 +317,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 10,
       'test_set': 30,
       'val_set': 30,
@@ -329,7 +329,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 20,
       'test_set': 30,
       'val_set': 30,
@@ -341,7 +341,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 30,
       'test_set': 30,
       'val_set': 30,
@@ -353,7 +353,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 60,
       'test_set': 30,
       'val_set': 30,
@@ -365,7 +365,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [1000],
       'timesteps': 90,
       'test_set': 30,
       'val_set': 30,
