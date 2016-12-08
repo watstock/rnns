@@ -167,8 +167,8 @@ def run(params, verbose=0):
     print('Architecture:', architecture)
     print('Dropout:', dropout)
 
-  # Normalize the dataset    
-  dataset = df.values
+  # Normalize the dataset
+  dataset = df.copy().values
   dataset = dataset.astype('float32')
   scaler = MinMaxScaler(feature_range=(0, 1))
   dataset = scaler.fit_transform(dataset)
@@ -189,7 +189,7 @@ def run(params, verbose=0):
   Y_train_prediction = model.predict(X_train, batch_size=batch_size)
   Y_test_prediction = model.predict(X_test, batch_size=batch_size)
 
-  # Invert predictions
+  # Scale data back
   df_shape = np.zeros((X_train.shape[0], X_train.shape[2]))
   df_shape[:,-1:] = Y_train_prediction
   Y_train_prediction = scaler.inverse_transform(df_shape)[:,-1]
@@ -221,11 +221,14 @@ def run(params, verbose=0):
     print('Test RMSE: %.4f' % test_rmse)
 
   # Calculate accuracy as Mean Absolute Percentage Error
-  train_mape = abs(Y_train - Y_train_prediction) / abs(Y_train)
-  test_mape = abs(Y_test - Y_test_prediction) / abs(Y_test)
+  train_mape = (abs(Y_train - Y_train_prediction) / abs(Y_train) * 100).mean()
+  test_mape = (abs(Y_test - Y_test_prediction) / abs(Y_test) * 100).mean()
+
   if verbose == 1:
-    print('Train MAPE: %.4f' % (train_mape.mean() * 100))
-    print('Test MAPE: %.4f' % (test_mape.mean() * 100))
+    print('Train MAPE: %.4f' % train_mape)
+    print('Test MAPE: %.4f' % test_mape)
+  
+  print('Test MAPE:', test_mape)
   
 
   test_index = df.index[-Y_test.shape[0]:].strftime('%Y-%m-%d')
@@ -248,10 +251,10 @@ def run(params, verbose=0):
     'test_rmse': test_rmse,
     'train_mae': train_mae,
     'test_mae': test_mae,
-    'train_mape': train_mape.mean() * 100,
-    'test_mape': test_mape.mean() * 100,
-    'train_accuracy': (1 - train_mape.mean()) * 100,
-    'test_accuracy': (1 - test_mape.mean()) * 100,
+    'train_mape': train_mape.mean(),
+    'test_mape': test_mape.mean(),
+    'train_accuracy': (100 - train_mape),
+    'test_accuracy': (100 - test_mape),
     'train_duration': train_duration,
     'batch_size': batch_size,
     'epochs': epochs,
@@ -270,6 +273,27 @@ def runner(param_sequence):
   for params in param_sequence:
     results = run(params)
 
+    # get prices from daily returns
+    history_dr = results.get('history')
+    prediction_dr = results.get('prediction')
+    start_price = params.get('test_start_price')
+    
+    history_price = np.zeros(len(history_dr) + 1)
+    history_price[0] = start_price
+    
+    prediction_price = np.zeros(len(history_dr) + 1)
+    prediction_price[0] = start_price
+
+    for i in xrange(len(history_dr)):
+      history_price[i+1] = history_price[i] * history_dr[i]
+      prediction_price[i+1] = prediction_price[i] * prediction_dr[i]
+
+    # print(history_price)
+    # print(prediction_price)
+
+    mape = (abs(history_price - prediction_price) / history_price * 100).mean()
+    print('Price MAPE:', mape)
+
     params.pop('df', None)
     print('Params:', params)
     print('Accuracy:', results.get('test_accuracy'))
@@ -284,6 +308,7 @@ def main():
   # Get stock data
   df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
   df = df.dropna()
+  start_price = df.ix[-31,-1]
   df = to_daily_returns(df)
   df = df.rename(columns={'Adj Close': 'Daily Returns'})
  
@@ -301,6 +326,44 @@ def main():
   # df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
 
   param_sequence = [
+    # 1 layer
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [200],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },    
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
     {
       'symbol': symbol,
       'df': df,
@@ -336,7 +399,233 @@ def main():
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
-    }
+    },
+
+    # 1 layer and 10 time steps
+    
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [200],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },    
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000],
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+
+    # 1 layer and 5 time steps
+    
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [200],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },    
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000],
+      'timesteps': 5,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+
+    # 2 layers
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100, 100],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [200, 200],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300, 300],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500, 500],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000, 1000],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000, 2000],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
   ]
 
   runner(param_sequence)
