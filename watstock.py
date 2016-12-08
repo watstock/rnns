@@ -83,10 +83,10 @@ def build_model(layers, sequence_length, dropout=None):
   return model
 
 
-def train_model(model, data, batch_size=1, epochs=100, valset=30):
+def train_model(model, data, batch_size=1, epochs=100, valset=30, patience=5):
   X_train, Y_train = data
 
-  early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+  early_stopping = EarlyStopping(monitor='val_loss', patience=patience, verbose=0)
   val_ratio = 1.0 * valset / len(X_train)
 
   start_time = time.time()
@@ -129,76 +129,56 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 
   return df
 
+def run(params, verbose=0):
 
-def main():
-
-  # params
-  symbol = 'AAPL'
-  date_from = '2006-12-05'
-  date_to = '2016-12-05'
-  tsteps = 15
-  testset = 30
-  layers = [300]
-
-  batch_size = 10
-  valset = 30
-  epochs = 500
-  dropout = None
-
-  print('Symbol:', symbol)
-  print('Time steps:', tsteps)
-  print('Test set:', testset)
-  print('Batch size:', batch_size)
-
-  # Define a date range
-  dates = pd.date_range(date_from, date_to)
-
-  # Get stock data
-  df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
-  df = df.dropna()
- 
-  # Add sentiment data
-  # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-  # df = df.join(df_sentiment)
-
-  # Add day of year data
-  # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
-  # dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
-  # df = df.join(dayofyear_df)
-
-  # Reordering columns so Ads Close is the last
-  #df = df[['Day of year', 'Volume', 'Adj Close']]
-  # df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
-
+  symbol = params.get('symbol')
+  df = params.get('df')
   date_from = df.index[0].strftime('%Y-%m-%d')
   date_to = df.index[-1].strftime('%Y-%m-%d')
-  print('Date from:', date_from)
-  print('Date to:', date_to)
-
   features = df.shape[1]
-  print('Features:', df.columns.values)
+
+  layers = params.get('layers', [300])
+  timesteps = params.get('timesteps', 15)
+  testset = params.get('test_set', 30)
+  valset = params.get('val_set', 30)
+  batch_size = params.get('batch_size', 10)
+  
+  epochs = params.get('epochs', 500)
+  dropout = params.get('dropout', None)
+  early_stopping_patience = params.get('early_stopping_patience', 5)
+
+  architecture = [features] + layers + [1]
+
+  if verbose == 1:
+    print('Symbol:', symbol)
+    print('Date from:', date_from)
+    print('Date to:', date_to)
+    print('Time steps:', timesteps)
+    print('Test set:', testset)
+    print('Batch size:', batch_size)
+    print('Features:', df.columns.values)
+    print('Architecture:', architecture)
+    print('Dropout:', dropout)
 
   # Normalize the dataset    
   dataset = df.values
   dataset = dataset.astype('float32')
-  
   scaler = MinMaxScaler(feature_range=(0, 1))
   dataset = scaler.fit_transform(dataset)
 
   # Split into train and test sets
-  X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=tsteps, testset=testset)
-  print('Train set:', len(X_train), ', test set:', len(X_test))
+  X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset)
+  if verbose == 1:
+    print('Train set:', len(X_train), ', test set:', len(X_test))
 
   # Create and fit the RNN
-  architecture = [features] + layers + [1]
-  print('Architecture:', architecture)
-  print('Dropout:', dropout)
-
-  model = build_model(architecture, sequence_length=tsteps, dropout=dropout)
-  train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs, valset=valset)
+  model = build_model(architecture, sequence_length=timesteps, dropout=dropout)
+  train_duration = train_model(model, (X_train, Y_train), batch_size=batch_size, epochs=epochs, valset=valset, patience=early_stopping_patience)
 
   # Make predictions
-  print('Predicting...')
+  if verbose == 1:
+    print('Predicting...')
+
   Y_train_prediction = model.predict(X_train, batch_size=batch_size)
   Y_test_prediction = model.predict(X_test, batch_size=batch_size)
 
@@ -222,8 +202,9 @@ def main():
   # Calculate accuracy as Mean absolute percentage error
   train_error_ds = abs(Y_train - Y_train_prediction) / Y_train
   test_error_df = abs(Y_test - Y_test_prediction) / Y_test
-  print('Train Mean Absolute Percentage Error:', train_error_ds.mean() * 100)
-  print('Test Mean Absolute Percentage Error:', test_error_df.mean() * 100)
+  if verbose == 1:
+    print('Train MAP Error:', train_error_ds.mean() * 100)
+    print('Test MAP Error:', test_error_df.mean() * 100)
   
   test_index = df.index[-Y_test.shape[0]:].strftime('%Y-%m-%d')
 
@@ -238,19 +219,69 @@ def main():
     'features': df.columns.values.tolist(),
     'price': Y_test.tolist(),
     'prediction': Y_test_prediction.tolist(),
-    'sequence_length': tsteps,
+    'timesteps': timesteps,
     'architecture': architecture,
     'dropout': dropout,
     'train_accuracy': (1 - train_error_ds.mean()) * 100,
     'test_accuracy': (1 - test_error_df.mean()) * 100,
     'train_duration': train_duration,
-    'batch_size': batch_size
+    'batch_size': batch_size,
+    'epochs': epochs,
+    'early_stopping_patience': early_stopping_patience
   }
 
-  print(prediction)
+  if verbose == 1:
+    print('Prediction results:')
+    print(prediction)
 
-  print('Saving prediction...')
-  save_prediction(prediction)
+  return prediction
+
+
+def runner(param_sequence):
+
+  for params in param_sequence:
+    results = run(params, verbose=1)
+    save_prediction(results)
+
+
+def main():
+
+  symbol = 'AAPL'
+  dates = pd.date_range('2006-12-05', '2016-12-05')
+
+  # Get stock data
+  df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
+  df = df.dropna()
+ 
+  # Add sentiment data
+  # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  # df = df.join(df_sentiment)
+
+  # Add day of year data
+  # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
+  # dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
+  # df = df.join(dayofyear_df)
+
+  # Reordering columns so Ads Close is the last
+  #df = df[['Day of year', 'Volume', 'Adj Close']]
+  # df = df[['Article Sentiment', 'Impact Score', 'Volume', 'Adj Close']]
+
+  param_sequence = [
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 1,
+      'dropout': None,
+      'early_stopping_patience': 5
+    }
+  ]
+
+  runner(param_sequence)
 
 if __name__ == "__main__":
   main()
