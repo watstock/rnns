@@ -268,9 +268,11 @@ def run(params, verbose=0):
 def runner(param_sequence):
 
   for params in param_sequence:
-    results = run(params, verbose=1)
+    results = run(params)
     save_prediction(results)
 
+    print('Params:', params)
+    print('Accuracy:', params.get('test_accuracy'))
 
 def main():
 
