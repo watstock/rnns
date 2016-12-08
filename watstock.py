@@ -270,7 +270,7 @@ def runner(param_sequence):
   for params in param_sequence:
     results = run(params)
 
-    params['df'] = None
+    params.pop('df', None)
     print('Params:', params)
     print('Accuracy:', results.get('test_accuracy'))
 
