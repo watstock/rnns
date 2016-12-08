@@ -129,11 +129,11 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
 
   return df
 
-def compute_daily_returns(df):
+def to_daily_returns(df):
   """Compute and return the daily return values."""
   daily_returns = df.copy()
-  daily_returns[1:] = (df[1:]/df[:-1].values) - 1 # to avoid index matching
-  daily_returns.ix[0, :] = 0
+  daily_returns[1:] = (df[1:]/df[:-1].values) # to avoid index matching
+  daily_returns.ix[0, :] = 1
   return daily_returns
 
 def run(params, verbose=0):
@@ -221,11 +221,11 @@ def run(params, verbose=0):
     print('Test RMSE: %.4f' % test_rmse)
 
   # Calculate accuracy as Mean Absolute Percentage Error
-  train_error_ds = abs(Y_train - Y_train_prediction) / abs(Y_train)
-  test_error_df = abs(Y_test - Y_test_prediction) / abs(Y_test)
+  train_mape = abs(Y_train - Y_train_prediction) / abs(Y_train)
+  test_mape = abs(Y_test - Y_test_prediction) / abs(Y_test)
   if verbose == 1:
-    print('Train MAPE: %.4f' % (train_error_ds.mean() * 100))
-    print('Test MAPE: %.4f' % (test_error_df.mean() * 100))
+    print('Train MAPE: %.4f' % (train_mape.mean() * 100))
+    print('Test MAPE: %.4f' % (test_mape.mean() * 100))
   
 
   test_index = df.index[-Y_test.shape[0]:].strftime('%Y-%m-%d')
@@ -248,8 +248,10 @@ def run(params, verbose=0):
     'test_rmse': test_rmse,
     'train_mae': train_mae,
     'test_mae': test_mae,
-    'train_mape': (1 - train_error_ds.mean()) * 100,
-    'test_mape': (1 - test_error_df.mean()) * 100,
+    'train_mape': train_mape.mean() * 100,
+    'test_mape': test_mape.mean() * 100,
+    'train_accuracy': (1 - train_mape.mean()) * 100,
+    'test_accuracy': (1 - test_mape.mean()) * 100,
     'train_duration': train_duration,
     'batch_size': batch_size,
     'epochs': epochs,
@@ -278,7 +280,7 @@ def main():
   # Get stock data
   df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
   df = df.dropna()
-  df = compute_daily_returns(df)
+  df = to_daily_returns(df)
   df = df.rename(columns={'Adj Close': 'Daily Returns'})
  
   # Add sentiment data
