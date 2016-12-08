@@ -107,7 +107,7 @@ def save_prediction(data):
   json_data = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
   # build file name
-  current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+  current_time = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime())
   output_name = 'results/%s_%s.json' % (data['symbol'], current_time)
 
   with open(output_name, 'w') as file:
@@ -128,6 +128,13 @@ def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
   df = df.join(df_temp)
 
   return df
+
+def compute_daily_returns(df):
+  """Compute and return the daily return values."""
+  daily_returns = df.copy()
+  daily_returns[1:] = (df[1:]/df[:-1].values) - 1 # to avoid index matching
+  daily_returns.ix[0, :] = 0
+  return daily_returns
 
 def run(params, verbose=0):
 
@@ -199,13 +206,28 @@ def run(params, verbose=0):
   df_shape[:,-1:] = Y_test
   Y_test = scaler.inverse_transform(df_shape)[:,-1]
 
-  # Calculate accuracy as Mean absolute percentage error
-  train_error_ds = abs(Y_train - Y_train_prediction) / Y_train
-  test_error_df = abs(Y_test - Y_test_prediction) / Y_test
+  # Calculate Mean Absolute Error (MAE)
+  train_mae = (abs(Y_train - Y_train_prediction)).mean()
+  test_mae = (abs(Y_test - Y_test_prediction)).mean()
   if verbose == 1:
-    print('Train MAP Error:', train_error_ds.mean() * 100)
-    print('Test MAP Error:', test_error_df.mean() * 100)
+    print('Train MAE: %.4f' % train_mae)
+    print('Test MAE: %.4f' % test_mae)
+
+  # Calculate Root Mean Squared Error (RMSE)
+  train_rmse = math.sqrt(mean_squared_error(Y_train, Y_train_prediction))
+  test_rmse = math.sqrt(mean_squared_error(Y_test, Y_test_prediction))
+  if verbose == 1:
+    print('Train RMSE: %.4f' % train_rmse)
+    print('Test RMSE: %.4f' % test_rmse)
+
+  # Calculate accuracy as Mean Absolute Percentage Error
+  train_error_ds = abs(Y_train - Y_train_prediction) / abs(Y_train)
+  test_error_df = abs(Y_test - Y_test_prediction) / abs(Y_test)
+  if verbose == 1:
+    print('Train MAPE: %.4f' % (train_error_ds.mean() * 100))
+    print('Test MAPE: %.4f' % (test_error_df.mean() * 100))
   
+
   test_index = df.index[-Y_test.shape[0]:].strftime('%Y-%m-%d')
 
   prediction = {
@@ -217,13 +239,17 @@ def run(params, verbose=0):
     'test_set': len(X_test),
     'dates': test_index.tolist(),
     'features': df.columns.values.tolist(),
-    'price': Y_test.tolist(),
+    'history': Y_test.tolist(),
     'prediction': Y_test_prediction.tolist(),
     'timesteps': timesteps,
     'architecture': architecture,
     'dropout': dropout,
-    'train_accuracy': (1 - train_error_ds.mean()) * 100,
-    'test_accuracy': (1 - test_error_df.mean()) * 100,
+    'train_rmse': train_rmse,
+    'test_rmse': test_rmse,
+    'train_mae': train_mae,
+    'test_mae': test_mae,
+    'train_mape': (1 - train_error_ds.mean()) * 100,
+    'test_mape': (1 - test_error_df.mean()) * 100,
     'train_duration': train_duration,
     'batch_size': batch_size,
     'epochs': epochs,
@@ -252,6 +278,8 @@ def main():
   # Get stock data
   df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
   df = df.dropna()
+  df = compute_daily_returns(df)
+  df = df.rename(columns={'Adj Close': 'Daily Returns'})
  
   # Add sentiment data
   # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
@@ -275,7 +303,7 @@ def main():
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
-      'epochs': 1,
+      'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
     }
