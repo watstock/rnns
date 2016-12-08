@@ -269,10 +269,12 @@ def runner(param_sequence):
 
   for params in param_sequence:
     results = run(params)
-    save_prediction(results)
 
+    params['df'] = None
     print('Params:', params)
-    print('Accuracy:', params.get('test_accuracy'))
+    print('Accuracy:', results.get('test_accuracy'))
+
+    save_prediction(results)
 
 def main():
 
