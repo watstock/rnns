@@ -271,6 +271,7 @@ def run(params, verbose=0):
 def runner(param_sequence):
 
   for params in param_sequence:
+
     results = run(params)
 
     # get prices from daily returns
@@ -350,7 +351,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },    
     {
       'symbol': symbol,
@@ -362,7 +364,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -374,7 +377,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -386,7 +390,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -398,7 +403,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
 
     # 1 layer and 10 time steps
@@ -426,7 +432,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },    
     {
       'symbol': symbol,
@@ -438,7 +445,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -450,7 +458,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -462,7 +471,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -474,7 +484,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
 
     # 1 layer and 5 time steps
@@ -490,6 +501,7 @@ def main():
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5,
+      'test_start_price': start_price,
       'test_start_price': start_price
     },
     {
@@ -502,7 +514,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },    
     {
       'symbol': symbol,
@@ -514,7 +527,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -526,7 +540,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -538,7 +553,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -550,7 +566,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
 
     # 2 layers
@@ -564,7 +581,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -576,7 +594,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -588,7 +607,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -600,7 +620,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -612,7 +633,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
     {
       'symbol': symbol,
@@ -624,7 +646,8 @@ def main():
       'batch_size': 10,
       'epochs': 500,
       'dropout': None,
-      'early_stopping_patience': 5
+      'early_stopping_patience': 5,
+      'test_start_price': start_price
     },
   ]
 
