@@ -300,7 +300,31 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
+      'layers': [500],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000],
       'timesteps': 15,
       'test_set': 30,
       'val_set': 30,
