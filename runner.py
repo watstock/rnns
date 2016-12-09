@@ -3,6 +3,7 @@ import json
 import os
 import pandas as pd
 import time
+import datetime
 
 import watstock
 
@@ -33,14 +34,18 @@ def symbol_to_path(symbol, base_dir="data"):
   return os.path.join(base_dir, "{}.csv".format(str(symbol)))
 
 
-def get_data(symbol, dates, usecols=['Date', 'Adj Close']):
+def get_data(symbol, dates=None, usecols=['Date', 'Adj Close'], index_col='Date', date_parser=None):
   """Read stock data (adjusted close) for given symbols from CSV files."""
-  df = pd.DataFrame(index=dates)
-
-  df_temp = pd.read_csv(symbol_to_path(symbol), index_col='Date',
-                        parse_dates=True, usecols=usecols,
-                        na_values=['nan'])
-  df = df.join(df_temp)
+  
+  df = pd.read_csv(symbol_to_path(symbol), 
+                   index_col=index_col, usecols=usecols,
+                   parse_dates=True, infer_datetime_format=True,
+                   date_parser=date_parser,
+                   na_values=['nan'])
+  
+  if dates is not None:
+    df_index = pd.DataFrame(index=dates)
+    df = df_index.join(df)
 
   return df
 
@@ -59,24 +64,45 @@ def runner(param_sequence):
 
     results = watstock.run(params)
 
+    # adjust params for printing
+    params['features'] = params.get('df').columns.values.tolist()
     params.pop('df', None)
+
     print('Params:', params)
-    print('Accuracy:', results.get('test_accuracy'))
+    print('Train Accuracy:', results.get('train_accuracy'))
+    print('Test Accuracy:', results.get('test_accuracy'))
 
     save_prediction(results)
 
+def date_from_timestamp(timestamp_str):
+    return datetime.datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ').date()
 
 def main():
 
   symbol = 'AAPL'
-  dates = pd.date_range('2012-08-26', '2016-12-05')
+  # dates = pd.date_range('2016-09-28', '2016-12-04')
 
   # Get stock data
-  df = get_data(symbol, dates, usecols=['Date', 'Adj Close'])
+  df = get_data(symbol, usecols=['Date', 'Adj Close'])
  
+  # Add VTEX data
+  df_vtex = get_data('squawkrbot_daily',
+    usecols=['SYMBOL', 'TIMESTAMP_UTC', 'BULL_MINUS_BEAR'], 
+    index_col='TIMESTAMP_UTC', date_parser=date_from_timestamp)
+  
+  # rename index
+  df_vtex.index.names = ['Date']
+
+  # filter by symbol
+  df_vtex = df_vtex[df_vtex['SYMBOL'] == symbol]
+  df_vtex = df_vtex[['BULL_MINUS_BEAR']]
+
+  df = df_vtex.join(df)
+
+
   # Add sentiment data
-  df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-  df = df.join(df_sentiment)
+  # df_sentiment = get_data('AOS-AAPL', dates, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  # df = df.join(df_sentiment)
 
   # Add day of year data
   # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
@@ -84,20 +110,69 @@ def main():
   # df = df.join(dayofyear_df)
 
   # Reordering columns so Ads Close is the last
-  df = df[['Article Sentiment', 'Impact Score', 'Adj Close']]
+  # df = df[['Article Sentiment', 'Impact Score', 'Adj Close']]
 
   # Drop N/a values
   df = df.dropna()
 
   param_sequence = [
+    # architectures
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [30],
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [50],
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [150],
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
     {
       'symbol': symbol,
       'df': df,
       'layers': [300],
-      'timesteps': 120,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -106,10 +181,10 @@ def main():
       'symbol': symbol,
       'df': df,
       'layers': [500],
-      'timesteps': 120,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -118,99 +193,14 @@ def main():
       'symbol': symbol,
       'df': df,
       'layers': [1000],
-      'timesteps': 120,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
+      'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
     },
-    # # architectures
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [50],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [100],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [200],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [300],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [500],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [1000],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
-    # {
-    #   'symbol': symbol,
-    #   'df': df,
-    #   'layers': [2000],
-    #   'timesteps': 15,
-    #   'test_set': 30,
-    #   'val_set': 30,
-    #   'batch_size': 10,
-    #   'epochs': 500,
-    #   'dropout': None,
-    #   'early_stopping_patience': 5
-    # },
 
     # # 1-50 time steps
     # {
