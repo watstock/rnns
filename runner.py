@@ -112,13 +112,9 @@ def main():
   df_temp = df_vtex.join(df_sentiment)
   df = df_temp.join(df)
 
-  # Reordering columns so Ads Close is the last
-  # df = df[['Article Sentiment', 'Impact Score', 'Adj Close']]
 
   # Drop N/a values
   df = df.dropna()
-  print(df)
-  return
 
   param_sequence = [
     # 3 time steps
