@@ -185,12 +185,20 @@ def run(params, verbose=0):
     print('Test RMSE: %.4f' % test_rmse)
 
   # Calculate accuracy as Mean Absolute Percentage Error
-  train_mape = (abs(Y_train - Y_train_prediction) / abs(Y_train) * 100).mean()
-  test_mape = (abs(Y_test - Y_test_prediction) / abs(Y_test) * 100).mean()
+  train_ape_ds = abs(Y_train - Y_train_prediction) / abs(Y_train) * 100
+  test_ape_ds = abs(Y_test - Y_test_prediction) / abs(Y_test) * 100
+  
+  train_mape = train_ape_ds.mean()
+  train_ape_max = train_ape_ds.max()
+
+  test_mape = test_ape_ds.mean()
+  test_ape_max = test_ape_ds.max()
 
   if verbose == 1:
     print('Train MAPE: %.4f' % train_mape)
+    print('Train APE max: %.4f' % train_ape_max)
     print('Test MAPE: %.4f' % test_mape)
+    print('Test APE max: %.4f' % test_ape_max)
 
   test_index = df.index[-Y_test.shape[0]:].strftime('%Y-%m-%d')
 
@@ -212,8 +220,10 @@ def run(params, verbose=0):
     'test_rmse': test_rmse,
     'train_mae': train_mae,
     'test_mae': test_mae,
-    'train_mape': train_mape.mean(),
-    'test_mape': test_mape.mean(),
+    'train_ape_max': train_ape_max,
+    'train_mape': train_mape,
+    'test_ape_max': test_ape_max,
+    'test_mape': test_mape,
     'train_accuracy': (100 - train_mape),
     'test_accuracy': (100 - test_mape),
     'train_duration': train_duration,

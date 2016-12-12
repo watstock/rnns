@@ -5,7 +5,7 @@ import pandas as pd
 import time
 import datetime
 
-import watstock
+import model
 
 
 def plot_data(df):
@@ -62,7 +62,7 @@ def runner(param_sequence):
 
   for params in param_sequence:
 
-    results = watstock.run(params)
+    results = model.run(params)
 
     # adjust params for printing
     df = params.get('df')
@@ -117,7 +117,6 @@ def main():
   df = df.dropna()
 
   param_sequence = [
-    # 3 time steps
     {
       'symbol': symbol,
       'df': df,
@@ -129,261 +128,7 @@ def main():
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [30],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [100],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [200],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [300],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [500],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1000],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1500],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [2000],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    
-    # 5 time steps
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [20],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [30],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [100],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [200],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [300],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [500],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1000],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1500],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [2000],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
+    }
   ]
 
   runner(param_sequence)
