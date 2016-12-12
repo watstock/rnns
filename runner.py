@@ -156,48 +156,12 @@ def main():
   df = df.dropna()
 
   param_sequence = [
-
+    # 300 time steps
     {
       'symbol': symbol,
       'df': df,
-      'layers': [30],
-      'timesteps': 15,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 15,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [100],
-      'timesteps': 15,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
-      'timesteps': 15,
+      'layers': [300],
+      'timesteps': 5,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -209,7 +173,7 @@ def main():
       'symbol': symbol,
       'df': df,
       'layers': [300],
-      'timesteps': 15,
+      'timesteps': 10,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -220,8 +184,8 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [500],
-      'timesteps': 15,
+      'layers': [300],
+      'timesteps': 20,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -232,8 +196,8 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
-      'timesteps': 15,
+      'layers': [300],
+      'timesteps': 30,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -244,8 +208,8 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1500],
-      'timesteps': 15,
+      'layers': [300],
+      'timesteps': 60,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -256,8 +220,20 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [2000],
-      'timesteps': 15,
+      'layers': [300],
+      'timesteps': 90,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 120,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
