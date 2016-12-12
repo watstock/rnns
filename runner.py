@@ -79,6 +79,11 @@ def runner(param_sequence):
 def date_from_timestamp(timestamp_str):
     return datetime.datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ').date()
 
+def get_stock_data(symbol, dates=None):  
+  df_stock = get_data(symbol, dates=dates, usecols=['Date', 'Volume', 'Adj Close'])
+
+  return df_stock
+
 def add_vtex_data(df, symbol):
   df_vtex = get_data('squawkrbot_daily',
     usecols=['SYMBOL', 'TIMESTAMP_UTC', 'BULL_MINUS_BEAR'], 
@@ -107,39 +112,159 @@ def add_day_of_year_data(df):
   dayofyear_df = dayofyear_df.join(df)
   return dayofyear_df
 
+def add_rolling_mean(df, window=20):
+  df = df.sort_index()
+  df = df.dropna()
+
+  data = df['Adj Close'].rolling(window=window).mean()
+  rm_df = pd.DataFrame(data=data.values, index=df.index.values, columns=['Rolling Mean'])
+
+  rm_df = rm_df.join(df)
+  return rm_df
+
+def add_rolling_std(df, window=20):
+  df = df.sort_index()
+  df = df.dropna()
+
+  data = df['Adj Close'].rolling(window=window).std()
+  rstd_df = pd.DataFrame(data=data.values, index=df.index.values, columns=['Rolling Std'])
+
+  rstd_df = rstd_df.join(df)
+  return rstd_df
+
 def main():
 
   symbol = 'AAPL'
-  # dates = pd.date_range('2016-09-28', '2016-12-04')
+  dates = pd.date_range('2006-12-05', '2016-12-05')
 
-  # Get stock data
-  df = get_data(symbol, usecols=['Date', 'Adj Close'])
+  # Get stock data: Volume, Adj Close
+  df = get_stock_data(symbol, dates=dates)
  
-  # Add VTEX data
-  df = add_vtex_data(df, symbol)
+  # Add rolling mean
+  df = add_rolling_mean(df, window=20)
 
-  # Add sentiment data
-  df = add_aos_data(df, symbol)
+  # Add rolling std
+  df = add_rolling_std(df, window=20)
+
+  # Add VTEX data: BULL_MINUS_BEAR
+  #df = add_vtex_data(df, symbol)
+
+  # Add sentiment data: Article Sentiment, Impact Score
+  #df = add_aos_data(df, symbol)
 
   # Drop N/a values
   df = df.dropna()
-  print(df.shape)
-  print(df)
-  return
 
   param_sequence = [
+
     {
       'symbol': symbol,
       'df': df,
-      'layers': [20],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'layers': [30],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
-    }
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [50],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [150],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1500],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
   ]
 
   runner(param_sequence)
