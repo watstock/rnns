@@ -79,16 +79,7 @@ def runner(param_sequence):
 def date_from_timestamp(timestamp_str):
     return datetime.datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ').date()
 
-def main():
-
-  symbol = 'AAPL'
-  # dates = pd.date_range('2016-09-28', '2016-12-04')
-
-  # Get stock data
-  df = get_data(symbol, usecols=['Date', 'Adj Close'])
- 
-
-  # Add VTEX data
+def add_vtex_data(df, symbol):
   df_vtex = get_data('squawkrbot_daily',
     usecols=['SYMBOL', 'TIMESTAMP_UTC', 'BULL_MINUS_BEAR'], 
     index_col='TIMESTAMP_UTC', date_parser=date_from_timestamp)
@@ -100,21 +91,41 @@ def main():
   df_vtex = df_vtex[df_vtex['SYMBOL'] == symbol]
   df_vtex = df_vtex[['BULL_MINUS_BEAR']]
 
+  df_vtex = df_vtex.join(df)
+  return df_vtex
+
+def add_aos_data(df, symbol):
+  df_sentiment = get_data('AOS-%s' % symbol, usecols=['Date', 'Article Sentiment', 'Impact Score'])
+  
+  df_sentiment = df_sentiment.join(df)
+  return df_sentiment
+
+def add_day_of_year_data(df):
+  df_dayofyear = pd.to_datetime(df.index.values).dayofyear
+  dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
+  
+  dayofyear_df = dayofyear_df.join(df)
+  return dayofyear_df
+
+def main():
+
+  symbol = 'AAPL'
+  # dates = pd.date_range('2016-09-28', '2016-12-04')
+
+  # Get stock data
+  df = get_data(symbol, usecols=['Date', 'Adj Close'])
+ 
+  # Add VTEX data
+  df = add_vtex_data(df, symbol)
 
   # Add sentiment data
-  df_sentiment = get_data('AOS-AAPL', usecols=['Date', 'Article Sentiment', 'Impact Score'])
-
-  # Add day of year data
-  # df_dayofyear = pd.to_datetime(df.index.values).dayofyear
-  # dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
-  # df = df.join(dayofyear_df)
-
-  df_temp = df_vtex.join(df_sentiment)
-  df = df_temp.join(df)
-
+  df = add_aos_data(df, symbol)
 
   # Drop N/a values
   df = df.dropna()
+  print(df.shape)
+  print(df)
+  return
 
   param_sequence = [
     {
