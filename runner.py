@@ -147,20 +147,20 @@ def main():
   df = add_rolling_std(df, window=20)
 
   # Add VTEX data: BULL_MINUS_BEAR
-  #df = add_vtex_data(df, symbol)
+  df = add_vtex_data(df, symbol)
 
   # Add sentiment data: Article Sentiment, Impact Score
-  #df = add_aos_data(df, symbol)
+  df = add_aos_data(df, symbol)
 
   # Drop N/a values
   df = df.dropna()
 
   param_sequence = [
-    # 300 time steps
+    # 500 time steps
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 5,
       'test_set': 30,
       'val_set': 30,
@@ -172,7 +172,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 10,
       'test_set': 30,
       'val_set': 30,
@@ -184,7 +184,19 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
+      'timesteps': 15,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500],
       'timesteps': 20,
       'test_set': 30,
       'val_set': 30,
@@ -196,7 +208,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 30,
       'test_set': 30,
       'val_set': 30,
@@ -208,7 +220,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 60,
       'test_set': 30,
       'val_set': 30,
@@ -220,7 +232,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 90,
       'test_set': 30,
       'val_set': 30,
@@ -232,7 +244,7 @@ def main():
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
+      'layers': [500],
       'timesteps': 120,
       'test_set': 30,
       'val_set': 30,
