@@ -156,77 +156,89 @@ def main():
   df = df.dropna()
 
   param_sequence = [
-    # 2-layer, 3 time steps arch
+    # 3-layer, 3 time steps arch
     {
       'symbol': symbol,
       'df': df,
-      'layers': [20, 20],
-      'timesteps': 5,
+      'layers': [20, 20, 20],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
     {
       'symbol': symbol,
       'df': df,
-      'layers': [30, 30],
-      'timesteps': 5,
+      'layers': [30, 30, 30],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
     {
       'symbol': symbol,
       'df': df,
-      'layers': [40, 40],
-      'timesteps': 5,
+      'layers': [40, 40, 40],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
     {
       'symbol': symbol,
       'df': df,
-      'layers': [50, 50],
-      'timesteps': 5,
+      'layers': [50, 50, 50],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
     {
       'symbol': symbol,
       'df': df,
-      'layers': [100, 100],
-      'timesteps': 5,
+      'layers': [100, 100, 100],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
     {
       'symbol': symbol,
       'df': df,
-      'layers': [200, 200],
-      'timesteps': 5,
+      'layers': [200, 200, 200],
+      'timesteps': 3,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': None,
+      'dropout': 0.2,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300, 300, 300],
+      'timesteps': 3,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': 0.2,
       'early_stopping_patience': 5
     },
 

@@ -69,9 +69,9 @@ def build_model(layers, sequence_length, dropout=None):
 
     model.add(layer)
 
-    # adding dropout
-    if dropout != None:
-      model.add(Dropout(dropout))
+  # adding dropout
+  if dropout != None:
+    model.add(Dropout(dropout))
 
   model.add(Dense(layers[-1]))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
