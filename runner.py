@@ -134,7 +134,7 @@ def add_rolling_std(df, window=20):
 
 def main():
 
-  symbol = 'GOOGL'
+  symbol = 'GRPN'
   dates = pd.date_range('2006-12-05', '2016-12-05')
 
   # Get stock data: Volume, Adj Close
