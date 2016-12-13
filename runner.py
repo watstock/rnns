@@ -141,10 +141,10 @@ def main():
   df = get_stock_data(symbol, dates=dates)
  
   # Add rolling mean
-  df = add_rolling_mean(df, window=5)
+  df = add_rolling_mean(df, window=10)
 
   # Add rolling std
-  df = add_rolling_std(df, window=5)
+  df = add_rolling_std(df, window=10)
 
   # Add VTEX data: BULL_MINUS_BEAR
   df = add_vtex_data(df, symbol)
