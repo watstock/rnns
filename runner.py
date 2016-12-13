@@ -166,7 +166,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -178,7 +178,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -190,7 +190,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -202,7 +202,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -214,7 +214,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -226,7 +226,7 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
       'early_stopping_patience': 5
     },
     {
@@ -238,7 +238,19 @@ def main():
       'val_set': 5,
       'batch_size': 1,
       'epochs': 500,
-      'dropout': 0.2,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500, 500, 500],
+      'timesteps': 3,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
       'early_stopping_patience': 5
     },
 
