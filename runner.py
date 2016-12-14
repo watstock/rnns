@@ -18,8 +18,8 @@ def save_prediction_to_db(data):
 
   from pymongo import MongoClient
   
-  MONGO_CONNECTION = os.environ['MONGO_CONNECTION']
-  client = MongoClient(MONGO_CONNECTION)
+  MONGODB_CONNECTION = os.environ['MONGODB_CONNECTION']
+  client = MongoClient(MONGODB_CONNECTION)
   
   db = client.watstock
   tests = db.tests
@@ -134,7 +134,7 @@ def runner(param_sequence):
 
 def main():
 
-  symbol = 'TSLA'
+  symbol = 'AAPL'
   dates = pd.date_range('2006-12-05', '2016-12-05')
 
   # Get stock data: Volume, Adj Close
