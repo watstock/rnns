@@ -15,19 +15,6 @@ def plot_data(df):
   df.plot()
   plt.show()
 
-
-def save_prediction(data):
-
-  # serialize
-  json_data = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
-
-  # build file name
-  current_time = time.strftime("%Y-%m-%d %H-%M-%S", time.localtime())
-  output_name = 'results/%s_%s.json' % (data['symbol'], current_time)
-
-  with open(output_name, 'w') as file:
-    file.write(json_data)
-
 def save_prediction_to_db(data):
 
   from pymongo import MongoClient
