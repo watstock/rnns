@@ -32,7 +32,7 @@ def save_prediction_to_db(data):
 
   from pymongo import MongoClient
   
-  MOGON_CONNECTION = os.environ['MONGO_CONNECTION'] #'mongodb://api:apipass@ds133338.mlab.com:33338/watstock'
+  MOGON_CONNECTION = os.environ['MONGO_CONNECTION']
   client = MongoClient(MONGO_CONNECTION)
   
   db = client.watstock
