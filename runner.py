@@ -32,7 +32,7 @@ def save_prediction_to_db(data):
 
   from pymongo import MongoClient
   
-  MOGON_CONNECTION = os.environ['MONGO_CONNECTION']
+  MONGO_CONNECTION = os.environ['MONGO_CONNECTION']
   client = MongoClient(MONGO_CONNECTION)
   
   db = client.watstock
@@ -42,7 +42,7 @@ def save_prediction_to_db(data):
   test['date'] = datetime.datetime.utcnow()
 
   test_id = tests.insert_one(test).inserted_id
-  print('Test data saved to the db:', test_id)
+  print('Test saved to the db, id:', test_id)
 
 def symbol_to_path(symbol, base_dir="data"):
   """Return CSV file path given ticker symbol."""
@@ -144,7 +144,7 @@ def runner(param_sequence):
     print('Train Accuracy:', results.get('train_accuracy'))
     print('Test Accuracy:', results.get('test_accuracy'))
 
-    save_prediction(results)
+    save_prediction_to_db(results)
 
 def main():
 
@@ -165,6 +165,9 @@ def main():
 
   # Add sentiment data: Article Sentiment, Impact Score
   df = add_aos_data(df, symbol)
+
+  # Sort data
+  df = df.sort_index()
 
   # Drop N/a values
   df = df.dropna()
