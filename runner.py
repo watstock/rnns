@@ -168,8 +168,6 @@ def main():
 
   # Drop N/a values
   df = df.dropna()
-  print(df)
-  return
 
   param_sequence = [
     # 3 time steps
