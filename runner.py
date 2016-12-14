@@ -72,25 +72,6 @@ def to_daily_returns(df):
   daily_returns.ix[0, :] = 1
   return daily_returns
 
-
-def runner(param_sequence):
-
-  for params in param_sequence:
-
-    results = model.run(params)
-
-    # adjust params for printing
-    df = params.get('df')
-    params['features'] = df.columns.values.tolist()
-    params['samples'] = df.shape[0]
-    params.pop('df', None)
-
-    print('Params:', params)
-    print('Train Accuracy:', results.get('train_accuracy'))
-    print('Test Accuracy:', results.get('test_accuracy'))
-
-    save_prediction(results)
-
 def date_from_timestamp(timestamp_str):
     return datetime.datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ').date()
 
@@ -146,6 +127,24 @@ def add_rolling_std(df, window=20):
 
   rstd_df = rstd_df.join(df)
   return rstd_df
+
+def runner(param_sequence):
+
+  for params in param_sequence:
+
+    results = model.run(params)
+
+    # adjust params for printing
+    df = params.get('df')
+    params['features'] = df.columns.values.tolist()
+    params['samples'] = df.shape[0]
+    params.pop('df', None)
+
+    print('Params:', params)
+    print('Train Accuracy:', results.get('train_accuracy'))
+    print('Test Accuracy:', results.get('test_accuracy'))
+
+    save_prediction(results)
 
 def main():
 
