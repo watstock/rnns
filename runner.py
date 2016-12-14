@@ -148,7 +148,7 @@ def runner(param_sequence):
 
 def main():
 
-  symbol = 'NVDA'
+  symbol = 'PCLN'
   dates = pd.date_range('2006-12-05', '2016-12-05')
 
   # Get stock data: Volume, Adj Close
