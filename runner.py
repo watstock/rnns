@@ -164,10 +164,12 @@ def main():
   df = add_vtex_data(df, symbol)
 
   # Add sentiment data: Article Sentiment, Impact Score
-  #df = add_aos_data(df, symbol)
+  df = add_aos_data(df, symbol)
 
   # Drop N/a values
   df = df.dropna()
+  print(df)
+  return
 
   param_sequence = [
     # 3 time steps
