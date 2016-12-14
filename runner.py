@@ -28,6 +28,10 @@ def save_prediction(data):
   with open(output_name, 'w') as file:
     file.write(json_data)
 
+def save_prediction_to_db(data):
+
+  from pymongo import MongoClient
+  #mongodb://api:apipass@ds133338.mlab.com:33338/watstock
 
 def symbol_to_path(symbol, base_dir="data"):
   """Return CSV file path given ticker symbol."""
@@ -141,10 +145,10 @@ def main():
   df = get_stock_data(symbol, dates=dates)
 
   # Add rolling mean
-  df = add_rolling_mean(df, window=3)
+  df = add_rolling_mean(df, window=10)
 
   # Add rolling std
-  df = add_rolling_std(df, window=3)
+  df = add_rolling_std(df, window=10)
 
   # Add VTEX data: BULL_MINUS_BEAR
   df = add_vtex_data(df, symbol)
@@ -392,6 +396,128 @@ def main():
       'df': df,
       'layers': [2000],
       'timesteps': 5,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+
+    # 7 time steps
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [30],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [50],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [100],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [150],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [200],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [300],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [500],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1000],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [1500],
+      'timesteps': 7,
+      'test_set': 10,
+      'val_set': 5,
+      'batch_size': 1,
+      'epochs': 500,
+      'dropout': None,
+      'early_stopping_patience': 5
+    },
+    {
+      'symbol': symbol,
+      'df': df,
+      'layers': [2000],
+      'timesteps': 7,
       'test_set': 10,
       'val_set': 5,
       'batch_size': 1,
