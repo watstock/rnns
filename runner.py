@@ -132,9 +132,9 @@ def runner(param_sequence):
 
     save_prediction_to_db(results)
 
-def main():
+def train_symbol(symbol):
 
-  symbol = 'FB'
+  # max data range
   dates = pd.date_range('2006-12-05', '2016-12-05')
 
   # Get stock data: Volume, Adj Close
@@ -527,6 +527,12 @@ def main():
   ]
 
   runner(param_sequence)
+
+def main():
+
+  symbols = ['GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  for symbol in symbols:
+    train_symbol(symbol)
 
 if __name__ == "__main__":
   main()
