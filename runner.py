@@ -156,16 +156,16 @@ def main():
   df = get_stock_data(symbol, dates=dates)
 
   # Add rolling mean
-  # df = add_rolling_mean(df, window=10)
+  df = add_rolling_mean(df, window=3)
 
-  # # Add rolling std
-  # df = add_rolling_std(df, window=10)
+  # Add rolling std
+  df = add_rolling_std(df, window=3)
 
   # Add VTEX data: BULL_MINUS_BEAR
   df = add_vtex_data(df, symbol)
 
   # Add sentiment data: Article Sentiment, Impact Score
-  df = add_aos_data(df, symbol)
+  #df = add_aos_data(df, symbol)
 
   # Drop N/a values
   df = df.dropna()
