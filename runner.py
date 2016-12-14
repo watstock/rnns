@@ -31,7 +31,18 @@ def save_prediction(data):
 def save_prediction_to_db(data):
 
   from pymongo import MongoClient
-  #mongodb://api:apipass@ds133338.mlab.com:33338/watstock
+  
+  MOGON_CONNECTION = os.environ['MONGO_CONNECTION'] #'mongodb://api:apipass@ds133338.mlab.com:33338/watstock'
+  client = MongoClient(MONGO_CONNECTION)
+  
+  db = client.watstock
+  tests = db.tests
+
+  test = data
+  test['date'] = datetime.datetime.utcnow()
+
+  test_id = tests.insert_one(test).inserted_id
+  print('Test data saved to the db:', test_id)
 
 def symbol_to_path(symbol, base_dir="data"):
   """Return CSV file path given ticker symbol."""
@@ -145,10 +156,10 @@ def main():
   df = get_stock_data(symbol, dates=dates)
 
   # Add rolling mean
-  df = add_rolling_mean(df, window=10)
+  # df = add_rolling_mean(df, window=10)
 
-  # Add rolling std
-  df = add_rolling_std(df, window=10)
+  # # Add rolling std
+  # df = add_rolling_std(df, window=10)
 
   # Add VTEX data: BULL_MINUS_BEAR
   df = add_vtex_data(df, symbol)
