@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import time
 import datetime
+from pymongo import MongoClient
 
 import model
 
@@ -16,8 +17,6 @@ def plot_data(df):
 
 def save_prediction_to_db(data):
 
-  from pymongo import MongoClient
-  
   MONGODB_CONNECTION = os.environ['MONGODB_CONNECTION']
   client = MongoClient(MONGODB_CONNECTION)
   
@@ -137,14 +136,17 @@ def train_symbol(symbol):
   # max data range
   dates = pd.date_range('2006-12-05', '2016-12-05')
 
+  # rolling window
+  rolling_window = 3
+
   # Get stock data: Volume, Adj Close
   df = get_stock_data(symbol, dates=dates)
 
   # Add rolling mean
-  df = add_rolling_mean(df, window=3)
+  df = add_rolling_mean(df, window=rolling_window)
 
   # Add rolling std
-  df = add_rolling_std(df, window=3)
+  df = add_rolling_std(df, window=rolling_window)
 
   # Add VTEX data: BULL_MINUS_BEAR
   df = add_vtex_data(df, symbol)
@@ -530,7 +532,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = ['GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
