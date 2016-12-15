@@ -114,8 +114,8 @@ def train_symbol(symbol):
     {
       'symbol': symbol,
       'df': df,
-      'layers': [300],
-      'timesteps': 30,
+      'layers': [500],
+      'timesteps': 60,
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -129,7 +129,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = ['AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA', 'AAPL']
+  symbols = reverse(['AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA', 'AAPL'])
   for symbol in symbols:
     train_symbol(symbol)
 
