@@ -125,7 +125,7 @@ def train_symbol(symbol):
     }
   ]
 
-  runner(param_sequence, predict=10, verbose=1)
+  runner(param_sequence, predict=10, verbose=0)
 
 def main():
 
