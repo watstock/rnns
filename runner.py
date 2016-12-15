@@ -103,47 +103,11 @@ def train_symbol(symbol):
   df = df.dropna()
 
   param_sequence = [
-    # 10 time steps
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [30],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
+    # 10 time steps    
     {
       'symbol': symbol,
       'df': df,
       'layers': [100],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
       'timesteps': 10,
       'test_set': 30,
       'val_set': 30,
@@ -199,38 +163,14 @@ def train_symbol(symbol):
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1500],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [2000],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
+    }
   ]
 
   runner(param_sequence, predict=10)
 
 def main():
 
-  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
