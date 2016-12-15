@@ -170,7 +170,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = ['GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['AMZN', 'FB', 'GOOGL']
   for symbol in symbols:
     train_symbol(symbol)
 
