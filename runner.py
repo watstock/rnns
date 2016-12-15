@@ -119,18 +119,6 @@ def train_symbol(symbol):
     {
       'symbol': symbol,
       'df': df,
-      'layers': [200],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
       'layers': [300],
       'timesteps': 10,
       'test_set': 30,
@@ -151,18 +139,6 @@ def train_symbol(symbol):
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1000],
-      'timesteps': 10,
-      'test_set': 30,
-      'val_set': 30,
-      'batch_size': 10,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
     }
   ]
 
@@ -170,7 +146,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = ['AMZN', 'FB', 'GOOGL']
+  symbols = ['NFLX', 'NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
