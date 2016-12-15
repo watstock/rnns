@@ -25,7 +25,10 @@ def save_prediction_to_db(data):
   collection = db.predictions
 
   prediction = data
-  prediction['date'] = datetime.datetime.utcnow()
+
+  now = datetime.datetime.utcnow()
+  prediction['timestamp'] = now
+  prediction['date'] = now.strftime('%Y-%m-%d')
 
   prediction_id = collection.insert_one(prediction).inserted_id
   print('Prediction saved to the db, id:', prediction_id)
