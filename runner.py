@@ -125,11 +125,12 @@ def train_symbol(symbol):
     }
   ]
 
-  runner(param_sequence, predict=10, verbose=0)
+  runner(param_sequence, predict=10, verbose=1)
 
 def main():
 
-  symbols = reversed(['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA'])
+  # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = reversed(['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN'])
   for symbol in symbols:
     train_symbol(symbol)
 
