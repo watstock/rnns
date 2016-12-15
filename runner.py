@@ -57,7 +57,7 @@ def runner(param_sequence, predict=1, verbose=0):
 
 def train_symbol(symbol):
 
-  print('Training models for %s' % symbol)
+  print('\nTraining models for %s' % symbol)
 
   # define max data range: 10 years
   end_date = datetime.datetime.now()
