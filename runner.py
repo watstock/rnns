@@ -231,7 +231,7 @@ def train_symbol(symbol):
 def main():
 
   #symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = ['NVDA', 'PCLN', 'TSLA']
+  symbols = ['GOOGL']
   for symbol in symbols:
     train_symbol(symbol)
 
