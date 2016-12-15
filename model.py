@@ -111,7 +111,7 @@ def normalize_dataframe(df):
 def calculate_model(dataset, scaler, architecture, days_ahead=1, timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, early_stopping_patience=5, verbose=1):
 
   if verbose == 1:
-    print('\n%s day prediction model' % days_ahead)
+    print('\n%s-day prediction model' % days_ahead)
 
   # Split into train and test sets
   X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset, days_ahead=days_ahead)

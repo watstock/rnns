@@ -80,26 +80,26 @@ def train_symbol(symbol):
   # add tech data
   rolling_window = 20
 
-  # # get rolling mean
-  # df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
+  # get rolling mean
+  df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
 
-  # # get rolling std
-  # df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
+  # get rolling std
+  df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
 
-  # df = df.join(df_rmeam)
-  # df = df.join(df_rstd)
+  df = df.join(df_rmeam)
+  df = df.join(df_rstd)
   
   # get AOS data
-  print('Loading AOS data...')
-  df_aos = data.get_aos_data(symbol)
-  df = df.join(df_aos)
+  # print('Loading AOS data...')
+  # df_aos = data.get_aos_data(symbol)
+  # df = df.join(df_aos)
 
-  # slice data by AOS
-  df = df.ix[df_aos.index.values[0]:]
+  # # slice data by AOS
+  # df = df.ix[df_aos.index.values[0]:]
 
-  # fill gaps
-  df['Article Sentiment'].fillna(value=0., inplace=True)
-  df['Impact Score'].fillna(value=0., inplace=True)
+  # # fill gaps
+  # df['Article Sentiment'].fillna(value=0., inplace=True)
+  # df['Impact Score'].fillna(value=0., inplace=True)
 
   # re-order data, so Adj. Close is the last column
   columns = df.columns.tolist()
@@ -114,11 +114,11 @@ def train_symbol(symbol):
     {
       'symbol': symbol,
       'df': df,
-      'layers': [1000],
-      'timesteps': 5,
+      'layers': [500],
+      'timesteps': 15,
       'test_set': 30,
       'val_set': 60,
-      'batch_size': 5,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 10
