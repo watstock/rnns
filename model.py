@@ -276,6 +276,7 @@ def run(params, predict=1, verbose=1):
     'history_to': date_to,
     'timesteps': timesteps,
     'architecture': architecture,
+    'features': df.columns.values.tolist(),
     'dropout': dropout,    
     'batch_size': batch_size,
     'epochs': epochs,

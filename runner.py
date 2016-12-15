@@ -64,7 +64,7 @@ def train_symbol(symbol):
   start_date = end_date - relativedelta(years=10)
 
   # get daily stock data
-  print('Loading daily stock data')
+  print('Loading daily stock data...')
   df = data.get_stock_data(symbol, start_date=start_date, end_date=end_date)  
   adjclose_column = 'Adj. Close'
   adjsclose_df = df[adjclose_column]
@@ -82,7 +82,7 @@ def train_symbol(symbol):
   df = df.join(df_rstd)
   
   # get AOS data
-  print('Loading AOS data')
+  print('Loading AOS data...')
   df_aos = data.get_aos_data(symbol)
   df = df.join(df_aos)
 
