@@ -9,6 +9,9 @@ from pymongo import MongoClient
 import model
 import data
 
+
+MONGODB_CONNECTION = os.environ['MONGODB_CONNECTION']
+
 def plot_data(df):
 
   import matplotlib.pyplot as plt
@@ -18,7 +21,6 @@ def plot_data(df):
 
 def save_prediction_to_db(data):
 
-  MONGODB_CONNECTION = os.environ['MONGODB_CONNECTION']
   client = MongoClient(MONGODB_CONNECTION)
   
   db = client.watstock
@@ -146,7 +148,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = ['NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['FB', 'GOOGL']
   for symbol in symbols:
     train_symbol(symbol)
 
