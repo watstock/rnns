@@ -3,10 +3,11 @@ import os
 import pandas as pd
 import time
 import datetime
+from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
 
 import model
-
+import data
 
 def plot_data(df):
 
@@ -21,70 +22,14 @@ def save_prediction_to_db(data):
   client = MongoClient(MONGODB_CONNECTION)
   
   db = client.watstock
-  tests = db.tests
+  collection = db.predictions
 
-  test = data
-  test['date'] = datetime.datetime.utcnow()
+  prediction = data
+  prediction['date'] = datetime.datetime.utcnow()
 
-  test_id = tests.insert_one(test).inserted_id
-  print('Test saved to the db, id:', test_id)
+  prediction_id = collection.insert_one(prediction).inserted_id
+  print('Prediction saved to the db, id:', prediction_id)
 
-def symbol_to_path(symbol, base_dir="data"):
-  """Return CSV file path given ticker symbol."""
-  return os.path.join(base_dir, "{}.csv".format(str(symbol)))
-
-
-def get_data(symbol, dates=None, usecols=['Date', 'Adj Close'], index_col='Date', date_parser=None):
-  """Read stock data (adjusted close) for given symbols from CSV files."""
-  
-  df = pd.read_csv(symbol_to_path(symbol), 
-                   index_col=index_col, usecols=usecols,
-                   parse_dates=True, infer_datetime_format=True,
-                   date_parser=date_parser,
-                   na_values=['nan'])
-  
-  if dates is not None:
-    df_index = pd.DataFrame(index=dates)
-    df = df_index.join(df)
-
-  return df
-
-
-def to_daily_returns(df):
-  """Compute and return the daily return values."""
-  daily_returns = df.copy()
-  daily_returns[1:] = (df[1:]/df[:-1].values) # to avoid index matching
-  daily_returns.ix[0, :] = 1
-  return daily_returns
-
-def date_from_timestamp(timestamp_str):
-    return datetime.datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ').date()
-
-def get_stock_data(symbol, dates=None):  
-  df_stock = get_data(symbol, dates=dates, usecols=['Date', 'Volume', 'Adj Close'])
-
-  return df_stock
-
-def add_vtex_data(df, symbol):
-  df_vtex = get_data('squawkrbot_daily',
-    usecols=['SYMBOL', 'TIMESTAMP_UTC', 'BULL_MINUS_BEAR'], 
-    index_col='TIMESTAMP_UTC', date_parser=date_from_timestamp)
-  
-  # rename index
-  df_vtex.index.names = ['Date']
-
-  # filter by symbol
-  df_vtex = df_vtex[df_vtex['SYMBOL'] == symbol]
-  df_vtex = df_vtex[['BULL_MINUS_BEAR']]
-
-  df_vtex = df_vtex.join(df)
-  return df_vtex
-
-def add_aos_data(df, symbol):
-  df_sentiment = get_data('AOS-%s' % symbol, usecols=['Date', 'Article Sentiment', 'Impact Score'])
-  
-  df_sentiment = df_sentiment.join(df)
-  return df_sentiment
 
 def add_day_of_year_data(df):
   df_dayofyear = pd.to_datetime(df.index.values).dayofyear
@@ -93,31 +38,11 @@ def add_day_of_year_data(df):
   dayofyear_df = dayofyear_df.join(df)
   return dayofyear_df
 
-def add_rolling_mean(df, window=20):
-  df = df.sort_index()
-  df = df.dropna()
-
-  data = df['Adj Close'].rolling(window=window).mean()
-  rm_df = pd.DataFrame(data=data.values, index=df.index.values, columns=['Rolling Mean'])
-
-  rm_df = rm_df.join(df)
-  return rm_df
-
-def add_rolling_std(df, window=20):
-  df = df.sort_index()
-  df = df.dropna()
-
-  data = df['Adj Close'].rolling(window=window).std()
-  rstd_df = pd.DataFrame(data=data.values, index=df.index.values, columns=['Rolling Std'])
-
-  rstd_df = rstd_df.join(df)
-  return rstd_df
-
-def runner(param_sequence):
+def runner(param_sequence, predict=1, verbose=0):
 
   for params in param_sequence:
 
-    results = model.run(params)
+    results = model.run(params, predict=predict, verbose=verbose)
 
     # adjust params for printing
     df = params.get('df')
@@ -125,51 +50,65 @@ def runner(param_sequence):
     params['samples'] = df.shape[0]
     params.pop('df', None)
 
-    print('Params:', params)
-    print('Train Accuracy:', results.get('train_accuracy'))
-    print('Test Accuracy:', results.get('test_accuracy'))
+    print('\nParams:', params)
+    print('Prediction Accuracy:', results.get('prediction_accuracy'))
 
     save_prediction_to_db(results)
 
 def train_symbol(symbol):
 
-  # max data range
-  dates = pd.date_range('2006-12-05', '2016-12-05')
+  print('Training models for %s' % symbol)
 
-  # rolling window
-  rolling_window = 3
+  # define max data range: 10 years
+  end_date = datetime.datetime.now()
+  start_date = end_date - relativedelta(years=10)
 
-  # Get stock data: Volume, Adj Close
-  df = get_stock_data(symbol, dates=dates)
+  # get daily stock data
+  print('Loading daily stock data')
+  df = data.get_stock_data(symbol, start_date=start_date, end_date=end_date)  
+  adjclose_column = 'Adj. Close'
+  adjsclose_df = df[adjclose_column]
 
-  # Add rolling mean
-  df = add_rolling_mean(df, window=rolling_window)
+  # add tech data
+  rolling_window = 20
 
-  # Add rolling std
-  df = add_rolling_std(df, window=rolling_window)
+  # get rolling mean
+  df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
 
-  # Add VTEX data: BULL_MINUS_BEAR
-  df = add_vtex_data(df, symbol)
+  # get rolling std
+  df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
 
-  # Add sentiment data: Article Sentiment, Impact Score
-  df = add_aos_data(df, symbol)
+  df = df.join(df_rmeam)
+  df = df.join(df_rstd)
+  
+  # get AOS data
+  print('Loading AOS data')
+  df_aos = data.get_aos_data(symbol)
+  df = df.join(df_aos)
 
-  # Sort data
-  df = df.sort_index()
+  # fill gaps
+  df['Article Sentiment'].fillna(value=0., inplace=True)
+  df['Impact Score'].fillna(value=0., inplace=True)
 
-  # Drop N/a values
+  # re-order data, so Adj. Close is the last column
+  columns = df.columns.tolist()
+  adjclose_index = columns.index(adjclose_column)
+  columns = columns[:adjclose_index] + columns[adjclose_index+1:] + [adjclose_column]
+  df = df[columns]
+
+  # drop n/a values
   df = df.dropna()
 
   param_sequence = [
-    # 3 time steps
+    # 10 time steps
     {
       'symbol': symbol,
       'df': df,
       'layers': [30],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -178,10 +117,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [50],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -190,10 +129,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [100],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -202,10 +141,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [150],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -214,10 +153,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [200],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -226,10 +165,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [300],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -238,10 +177,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [500],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -250,10 +189,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [1000],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -262,10 +201,10 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [1500],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
@@ -274,265 +213,21 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [2000],
-      'timesteps': 3,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-
-    # 5 time steps
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [30],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [100],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [200],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [300],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [500],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1000],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1500],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [2000],
-      'timesteps': 5,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-
-    # 7 time steps
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [30],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [50],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [100],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [150],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [200],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [300],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [500],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1000],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [1500],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
-      'epochs': 500,
-      'dropout': None,
-      'early_stopping_patience': 5
-    },
-    {
-      'symbol': symbol,
-      'df': df,
-      'layers': [2000],
-      'timesteps': 7,
-      'test_set': 10,
-      'val_set': 5,
-      'batch_size': 1,
+      'timesteps': 10,
+      'test_set': 30,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'dropout': None,
       'early_stopping_patience': 5
     },
   ]
 
-  runner(param_sequence)
+  runner(param_sequence, predict=10)
 
 def main():
 
-  symbols = ['NVDA', 'PCLN', 'TSLA']
+  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
