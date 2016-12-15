@@ -108,8 +108,6 @@ def train_symbol(symbol):
   df = df[columns]
 
   # drop n/a values
-  print(df)
-  return
   df = df.dropna()
 
   param_sequence = [
