@@ -253,7 +253,8 @@ def run(params, predict=1, verbose=1):
   # Building and training models
   predictions = []
   model_params = []
-  test_accuracy = []
+  test_accuracies = []
+  train_durations = []
   for i in range(predict):
     _, prediction, params = calculate_model(dataset, scaler, architecture, days_ahead=(i+1), 
       timesteps=timesteps, testset=testset, valset=valset, dropout=dropout, batch_size=batch_size, 
@@ -261,7 +262,9 @@ def run(params, predict=1, verbose=1):
     
     predictions.append(prediction)
     model_params.append(params)
-    test_accuracy.append(params.get('test_accuracy'))
+
+    test_accuracies.append(params.get('test_accuracy'))
+    train_durations.append(params.get('train_duration'))
 
   # Building n-day prediction
   today = datetime.datetime.utcnow()
@@ -284,7 +287,8 @@ def run(params, predict=1, verbose=1):
     'prediction_dates': prediction_dates,
     'prediction': predictions,
     'prediction_models': model_params,
-    'prediction_accuracy': np.mean(test_accuracy)
+    'prediction_accuracy': np.mean(test_accuracies),
+    'train_duration': np.sum(train_durations)
   }
 
   if verbose == 1:
