@@ -129,7 +129,7 @@ def train_symbol(symbol):
 
 def main():
 
-  symbols = reverse(['AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA', 'AAPL'])
+  symbols = reverse(['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA'])
   for symbol in symbols:
     train_symbol(symbol)
 
