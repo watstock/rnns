@@ -80,14 +80,14 @@ def train_symbol(symbol):
   # add tech data
   rolling_window = 20
 
-  # get rolling mean
-  df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
+  # # get rolling mean
+  # df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
 
-  # get rolling std
-  df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
+  # # get rolling std
+  # df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
 
-  df = df.join(df_rmeam)
-  df = df.join(df_rstd)
+  # df = df.join(df_rmeam)
+  # df = df.join(df_rstd)
   
   # get AOS data
   print('Loading AOS data...')
