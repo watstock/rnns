@@ -108,10 +108,10 @@ def normalize_dataframe(df):
 
   return dataset, scaler
 
-def calculate_model(dataset, scaler, architecture, days_ahead=1, timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, early_stopping_patience=5, verbose=1):
+def calculate_model(symbol, dataset, scaler, architecture, days_ahead=1, timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, early_stopping_patience=5, verbose=1):
 
   if verbose == 1:
-    print('\n%s-day prediction model' % days_ahead)
+    print('\n%s-day prediction model for %s' % (days_ahead, symbol))
 
   # Split into train and test sets
   X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset, days_ahead=days_ahead)
@@ -256,7 +256,7 @@ def run(params, predict=1, verbose=1):
   test_accuracies = []
   train_durations = []
   for i in range(predict):
-    _, prediction, params = calculate_model(dataset, scaler, architecture, days_ahead=(i+1), 
+    _, prediction, params = calculate_model(symbol, dataset, scaler, architecture, days_ahead=(i+1), 
       timesteps=timesteps, testset=testset, valset=valset, dropout=dropout, batch_size=batch_size, 
       epochs=epochs, early_stopping_patience=early_stopping_patience, verbose=verbose)
     
@@ -292,7 +292,7 @@ def run(params, predict=1, verbose=1):
   }
 
   if verbose == 1:
-    print('Prediction results:')
+    print('\nPrediction results:')
     print(result)
 
   return result
