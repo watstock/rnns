@@ -73,7 +73,7 @@ def train_symbol(symbol):
   df = data.get_stock_data(symbol, start_date=start_date, end_date=end_date)
 
   # select columns
-  df = df[['Adj. Volume', 'Adj. Close']]
+  #df = df[['Adj. Volume', 'Adj. Close']]
   adjclose_column = 'Adj. Close'
   adjsclose_df = df[adjclose_column]
 
@@ -90,16 +90,16 @@ def train_symbol(symbol):
   df = df.join(df_rstd)
   
   # get AOS data
-  # print('Loading AOS data...')
-  # df_aos = data.get_aos_data(symbol)
-  # df = df.join(df_aos)
+  print('Loading AOS data...')
+  df_aos = data.get_aos_data(symbol)
+  df = df.join(df_aos)
 
-  # # slice data by AOS
-  # df = df.ix[df_aos.index.values[0]:]
+  # slice data by AOS
+  df = df.ix[df_aos.index.values[0]:]
 
-  # # fill gaps
-  # df['Article Sentiment'].fillna(value=0., inplace=True)
-  # df['Impact Score'].fillna(value=0., inplace=True)
+  # fill gaps
+  df['Article Sentiment'].fillna(value=0., inplace=True)
+  df['Impact Score'].fillna(value=0., inplace=True)
 
   # re-order data, so Adj. Close is the last column
   columns = df.columns.tolist()
@@ -130,7 +130,7 @@ def train_symbol(symbol):
 def main():
 
   # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = reversed(['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA'])
+  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
