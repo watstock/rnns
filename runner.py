@@ -115,7 +115,7 @@ def train_symbol(symbol):
       'symbol': symbol,
       'df': df,
       'layers': [500],
-      'timesteps': 15,
+      'timesteps': 30,
       'test_set': 30,
       'val_set': 60,
       'batch_size': 10,
