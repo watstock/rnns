@@ -60,6 +60,14 @@ def runner(param_sequence, predict=1, verbose=0):
 
     save_prediction_to_db(results)
 
+def build_params(architectures, timesteps):
+  params = []
+  for arch in architectures:
+    for tstep in timesteps:
+      params.append(arch + [tstep])
+
+  return params
+
 def train_symbol(symbol):
 
   print('\nTraining models for %s' % symbol)
@@ -110,27 +118,49 @@ def train_symbol(symbol):
   # drop n/a values
   df = df.dropna()
 
-  param_sequence = [
-    {
+  # build param sequence
+  params = build_params(
+    architectures=(
+      [[50], None], 
+      [[100], None], 
+      [[200], None], 
+      [[300], None], 
+      [[500], None], 
+      [[1000], None], 
+      [[1500], None], 
+      [[2000], None], 
+      [[100,100], 0.2], 
+      [[100,300], 0.2], 
+      [[300,300], 0.2], 
+      [[100,300,100], 0.2]
+    ),
+    timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
+  )
+
+  param_sequence = []
+  for p in params:
+    param = {
       'symbol': symbol,
       'df': df,
-      'layers': [500],
-      'timesteps': 30,
+      'layers': p[0],
+      'dropout': p[1],
+      'timesteps': p[2],
       'test_set': 30,
       'val_set': 60,
       'batch_size': 10,
       'epochs': 500,
-      'dropout': None,
       'early_stopping_patience': 10
     }
-  ]
+    param_sequence.append(param)
 
+
+  # start runner
   runner(param_sequence, predict=10, verbose=1)
 
 def main():
 
   # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['NVDA']
   for symbol in symbols:
     train_symbol(symbol)
 
