@@ -147,9 +147,9 @@ def train_symbol(symbol):
       'timesteps': p[2],
       'test_set': 30,
       'val_set': 60,
-      'batch_size': 10,
+      'batch_size': 1,
       'epochs': 500,
-      'early_stopping_patience': 10
+      'early_stopping_patience': 5
     }
     param_sequence.append(param)
 
