@@ -123,19 +123,18 @@ def train_symbol(symbol):
     architectures=(
       [[50], None], 
       [[100], None], 
-      # [[200], None], 
-      # [[300], None], 
-      #[[500], None], 
-      # [[1000], None], 
-      # [[1500], None], 
-      # [[2000], None], 
-      # [[100,100], 0.2], 
-      # [[100,300], 0.2], 
-      # [[300,300], 0.2], 
-      # [[100,300,100], 0.2]
+      [[200], None], 
+      [[300], None], 
+      [[500], None], 
+      [[1000], None], 
+      [[1500], None], 
+      [[2000], None], 
+      [[100,100], 0.2], 
+      [[100,300], 0.2], 
+      [[300,300], 0.2], 
+      [[100,300,100], 0.2]
     ),
-    #timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
-    timesteps=(3, 5)
+    timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
   )
 
   param_sequence = []
@@ -161,7 +160,7 @@ def train_symbol(symbol):
 def main():
 
   # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = reversed(['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA'])
+  symbols = ['NVDA']
   for symbol in symbols:
     train_symbol(symbol)
 
