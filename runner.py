@@ -121,9 +121,9 @@ def train_symbol(symbol):
   # build param sequence
   params = build_params(
     architectures=(
-      [[50], None], 
-      [[100], None], 
-      [[200], None], 
+      # [[50], None], 
+      # [[100], None], 
+      # [[200], None], 
       [[300], None], 
       [[500], None], 
       [[1000], None], 
