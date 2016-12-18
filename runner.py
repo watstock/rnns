@@ -85,35 +85,37 @@ def train_symbol(symbol):
   adjclose_column = 'Adj. Close'
   adjsclose_df = df[adjclose_column]
 
+  df = df[[adjclose_column]]
+
   # add tech data
-  rolling_window = 20
+  # rolling_window = 20
 
-  # get rolling mean
-  df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
+  # # get rolling mean
+  # df_rmeam = data.get_rolling_mean(adjsclose_df, window=rolling_window)
 
-  # get rolling std
-  df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
+  # # get rolling std
+  # df_rstd = data.get_rolling_std(adjsclose_df, window=rolling_window)
 
-  df = df.join(df_rmeam)
-  df = df.join(df_rstd)
+  # df = df.join(df_rmeam)
+  # df = df.join(df_rstd)
   
-  # get AOS data
-  print('Loading AOS data...')
-  df_aos = data.get_aos_data(symbol)
-  df = df.join(df_aos)
+  # # get AOS data
+  # print('Loading AOS data...')
+  # df_aos = data.get_aos_data(symbol)
+  # df = df.join(df_aos)
 
-  # slice data by AOS
-  df = df.ix[df_aos.index.values[0]:]
+  # # slice data by AOS
+  # df = df.ix[df_aos.index.values[0]:]
 
-  # fill gaps
-  df['Article Sentiment'].fillna(value=0., inplace=True)
-  df['Impact Score'].fillna(value=0., inplace=True)
+  # # fill gaps
+  # df['Article Sentiment'].fillna(value=0., inplace=True)
+  # df['Impact Score'].fillna(value=0., inplace=True)
 
-  # re-order data, so Adj. Close is the last column
-  columns = df.columns.tolist()
-  adjclose_index = columns.index(adjclose_column)
-  columns = columns[:adjclose_index] + columns[adjclose_index+1:] + [adjclose_column]
-  df = df[columns]
+  # # re-order data, so Adj. Close is the last column
+  # columns = df.columns.tolist()
+  # adjclose_index = columns.index(adjclose_column)
+  # columns = columns[:adjclose_index] + columns[adjclose_index+1:] + [adjclose_column]
+  # df = df[columns]
 
   # drop n/a values
   df = df.dropna()
@@ -121,20 +123,21 @@ def train_symbol(symbol):
   # build param sequence
   params = build_params(
     architectures=(
-      # [[50], None], 
-      # [[100], None], 
-      # [[200], None], 
+      [[50], None], 
+      [[100], None], 
+      [[200], None], 
       [[300], None], 
       [[500], None], 
       [[1000], None], 
-      [[1500], None], 
-      [[2000], None], 
-      [[100,100], 0.2], 
-      [[100,300], 0.2], 
-      [[300,300], 0.2], 
-      [[100,300,100], 0.2]
+      # [[1500], None], 
+      # [[2000], None], 
+      # [[100,100], 0.2], 
+      # [[100,300], 0.2], 
+      # [[300,300], 0.2], 
+      # [[100,300,100], 0.2]
     ),
-    timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
+    # timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
+    timesteps=(3, 5, 15, 30, 60)
   )
 
   param_sequence = []
@@ -146,8 +149,8 @@ def train_symbol(symbol):
       'dropout': p[1],
       'timesteps': p[2],
       'test_set': 30,
-      'val_set': 60,
-      'batch_size': 1,
+      'val_set': 30,
+      'batch_size': 10,
       'epochs': 500,
       'early_stopping_patience': 5
     }

@@ -267,10 +267,10 @@ def run(params, predict=1, verbose=1):
     train_durations.append(params.get('train_duration'))
 
   # Building n-day prediction
-  today = datetime.datetime.utcnow()
+  last_date = df.index[-1]
   prediction_dates = []
   for i in range(predict):
-    date = today + relativedelta(days=i)
+    date = last_date + relativedelta(days=(i+1))
     prediction_dates.append(date.strftime('%Y-%m-%d'))
 
   result = {
