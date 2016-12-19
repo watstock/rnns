@@ -268,10 +268,12 @@ def run(params, predict=1, verbose=1):
 
   # Building n-day prediction
   last_date = df.index[-1]
+  weekend = set([5, 6])
   prediction_dates = []
-  for i in range(predict):
-    date = last_date + relativedelta(days=(i+1))
-    prediction_dates.append(date.strftime('%Y-%m-%d'))
+  while len(prediction_dates) < predict:
+    last_date += relativedelta(days=1)
+    if last_date.weekday() not in weekend:
+      prediction_dates.append(last_date.strftime('%Y-%m-%d'))
 
   result = {
     'symbol': symbol,
