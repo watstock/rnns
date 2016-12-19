@@ -138,7 +138,7 @@ def train_symbol(symbol):
       # [[100,300,100], 0.2]
     ),
     # timesteps=(3, 5, 10, 15, 20, 30, 50, 60, 90)
-    timesteps=(3, 5)
+    timesteps=(5)
   )
 
   param_sequence = []
