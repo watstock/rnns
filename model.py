@@ -92,7 +92,7 @@ def train_model(model, data, batch_size=1, epochs=100, valset=30, patience=5, ve
             Y_train, 
             batch_size=batch_size, 
             nb_epoch=epochs,
-            verbose=verbose,
+            verbose=0,
             validation_split=val_ratio, 
             callbacks=[early_stopping])
 
