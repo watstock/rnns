@@ -20,28 +20,30 @@ from keras.callbacks import EarlyStopping
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 
+import utils
+
 # fixing random generator
 np.random.seed(1234)
 
 
-def create_dataset(df, days_ahead=1, timesteps=1):
+def create_dataset(df, steps_ahead=1, timesteps=1):
   """Converts a dataframe of values into a matrix"""
   dataX, dataY = [], []
-  for i in xrange(len(df) - timesteps - days_ahead + 1):
+  for i in xrange(len(df) - timesteps - steps_ahead + 1):
     dataX.append(df[i:(i + timesteps), :])
-    dataY.append(df[i + timesteps + days_ahead - 1, :])
+    dataY.append(df[i + timesteps + steps_ahead - 1, :])
 
   return np.array(dataX), np.array(dataY)
 
-def split_dataset(dataframe, days_ahead=1, timesteps=30, testset=30):
+def split_dataset(dataframe, steps_ahead=1, timesteps=30, testset=30):
   # split into train and test datasets
-  testset_ratio = 1.0 * (testset + timesteps + days_ahead - 1)/len(dataframe)
+  testset_ratio = 1.0 * (testset + timesteps + steps_ahead - 1) / len(dataframe)
   train_size = int(len(dataframe) * (1 - testset_ratio))
   train_df, test_df = dataframe[0:train_size,:], dataframe[train_size:,:]
 
-  # Reshape into X=...,t-3,t-2,t-1,t and Y=t+days_ahead
-  X_train, Y_train = create_dataset(train_df, days_ahead=days_ahead, timesteps=timesteps)
-  X_test, Y_test = create_dataset(test_df, days_ahead=days_ahead, timesteps=timesteps)
+  # Reshape into X=...,t-3,t-2,t-1,t and Y=t+steps_ahead
+  X_train, Y_train = create_dataset(train_df, steps_ahead=steps_ahead, timesteps=timesteps)
+  X_test, Y_test = create_dataset(test_df, steps_ahead=steps_ahead, timesteps=timesteps)
 
   # Reshape inputs from [samples, features] to [samples, timesteps, features] format
   X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape[2]))
@@ -73,9 +75,11 @@ def build_model(layers, sequence_length, dropout=None):
   if dropout != None:
     model.add(Dropout(dropout))
 
+  # output layer
   model.add(Dense(layers[-1]))
   model.add(Activation('linear')) # Since we are doing a regression, its activation is linear
 
+  # choose optimizer
   model.compile(loss='mse', optimizer='rmsprop')
 
   return model
@@ -92,7 +96,7 @@ def train_model(model, data, batch_size=1, epochs=100, valset=30, patience=5, ve
             Y_train, 
             batch_size=batch_size, 
             nb_epoch=epochs,
-            verbose=0,
+            verbose=verbose,
             validation_split=val_ratio, 
             callbacks=[early_stopping])
 
@@ -108,13 +112,15 @@ def normalize_dataframe(df):
 
   return dataset, scaler
 
-def calculate_model(symbol, dataset, scaler, architecture, days_ahead=1, timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, early_stopping_patience=5, verbose=1):
+def calculate_model(symbol, dataset, scaler, architecture, steps_ahead=1, 
+  timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, 
+  early_stopping_patience=5, verbose=1):
 
   if verbose == 1:
-    print('\n%s-day prediction model for %s' % (days_ahead, symbol))
+    print('\n%s-step prediction model for %s' % (steps_ahead, symbol))
 
   # Split into train and test sets
-  X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset, days_ahead=days_ahead)
+  X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset, steps_ahead=steps_ahead)
   if verbose == 1:
     print('Train set:', len(X_train), ', test set:', len(X_test))
 
@@ -215,7 +221,7 @@ def calculate_model(symbol, dataset, scaler, architecture, days_ahead=1, timeste
   return model, prediction, params
 
 
-def run(params, predict=1, verbose=1):
+def run(params, verbose=1):
 
   symbol = params.get('symbol')
   df = params.get('df')
@@ -225,6 +231,7 @@ def run(params, predict=1, verbose=1):
 
   layers = params.get('layers', [300])
   timesteps = params.get('timesteps', 15)
+  steps_ahead = params.get('steps_ahead', 1)
   testset = params.get('test_set', 30)
   valset = params.get('val_set', 30)
   batch_size = params.get('batch_size', 10)
@@ -245,52 +252,37 @@ def run(params, predict=1, verbose=1):
     print('Features:', df.columns.values)
     print('Architecture:', architecture)
     print('Dropout:', dropout)
-    print('Predict: %s days' % predict)
+    print('Predict: %s steps ahead' % steps_ahead)
 
   # Normalize the dataset
   dataset, scaler = normalize_dataframe(df)
 
-  # Building and training models
-  predictions = []
-  model_params = []
-  test_accuracies = []
-  train_durations = []
-  for i in range(predict):
-    _, prediction, params = calculate_model(symbol, dataset, scaler, architecture, days_ahead=(i+1), 
-      timesteps=timesteps, testset=testset, valset=valset, dropout=dropout, batch_size=batch_size, 
-      epochs=epochs, early_stopping_patience=early_stopping_patience, verbose=verbose)
-    
-    predictions.append(prediction)
-    model_params.append(params)
-
-    test_accuracies.append(params.get('test_accuracy'))
-    train_durations.append(params.get('train_duration'))
+  # Building and training model
+  _, prediction, model_params = calculate_model(symbol, dataset, scaler, architecture, 
+    steps_ahead=steps_ahead, timesteps=timesteps, testset=testset, valset=valset, dropout=dropout, 
+    batch_size=batch_size, epochs=epochs, early_stopping_patience=early_stopping_patience, 
+    verbose=verbose)
 
   # Building n-day prediction
   last_date = df.index[-1]
-  weekend = set([5, 6])
-  prediction_dates = []
-  while len(prediction_dates) < predict:
-    last_date += relativedelta(days=1)
-    if last_date.weekday() not in weekend:
-      prediction_dates.append(last_date.strftime('%Y-%m-%d'))
+  prediction_date = utils.next_work_day(last_date).strftime('%Y-%m-%d')
 
   result = {
     'symbol': symbol,
     'history_from': date_from,
     'history_to': date_to,
     'timesteps': timesteps,
+    'steps_ahead': steps_ahead,
     'architecture': architecture,
     'features': df.columns.values.tolist(),
     'dropout': dropout,    
     'batch_size': batch_size,
     'epochs': epochs,
     'early_stopping_patience': early_stopping_patience,
-    'prediction_dates': prediction_dates,
-    'prediction': predictions,
-    'prediction_models': model_params,
-    'prediction_accuracy': np.mean(test_accuracies),
-    'train_duration': np.sum(train_durations)
+    'prediction_date': prediction_date,
+    'prediction': prediction,
+    'prediction_model': model_params,
+    'prediction_accuracy': model_params.get('test_accuracy')
   }
 
   if verbose == 1:

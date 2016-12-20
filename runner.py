@@ -1,3 +1,7 @@
+"""
+Model runner
+"""
+
 from __future__ import print_function
 import os
 import pandas as pd
@@ -24,7 +28,7 @@ def save_prediction_to_db(data):
   client = MongoClient(MONGODB_CONNECTION)
   
   db = client.watstock
-  collection = db.predictions
+  collection = db.predictions2
 
   prediction = data
 
@@ -43,11 +47,10 @@ def add_day_of_year_data(df):
   dayofyear_df = dayofyear_df.join(df)
   return dayofyear_df
 
-def runner(param_sequence, predict=1, verbose=0):
+def runner(param_sequence, verbose=0):
 
   for params in param_sequence:
-
-    results = model.run(params, predict=predict, verbose=verbose)
+    results = model.run(params, verbose=verbose)
 
     # adjust params for printing
     df = params.get('df')
@@ -58,21 +61,19 @@ def runner(param_sequence, predict=1, verbose=0):
     print('\nParams:', params)
     print('Prediction Accuracy:', results.get('prediction_accuracy'))
 
-    save_prediction_to_db(results)
+    #save_prediction_to_db(results)
 
-def build_params(architectures, timesteps):
+def build_params(architectures, timesteps, steps_ahead):
   params = []
   for arch in architectures:
     for tstep in timesteps:
-      params.append(arch + [tstep])
-
+        for step_ahead in steps_ahead:
+          params.append(arch + [tstep] + [step_ahead])
   return params
 
-def train_symbol(symbol):
-
-  print('\nTraining models for %s' % symbol)
-
-  # define max data range: 10 years
+def load_data(symbol):
+  
+  # define max date range: 10 years
   end_date = datetime.datetime.now()
   start_date = end_date - relativedelta(years=10)
 
@@ -120,6 +121,15 @@ def train_symbol(symbol):
   # drop n/a values
   df = df.dropna()
 
+  return df
+
+def train_symbol(symbol):
+
+  print('\nTraining models for %s' % symbol)
+
+  # load data
+  df = load_data(symbol)
+
   # build param sequence
   params = build_params(
     architectures=(
@@ -127,17 +137,18 @@ def train_symbol(symbol):
       # [[100], None], 
       # [[150], None], 
       # [[200], None], 
-      # [[300], None], 
+      [[300], None], 
       # [[500], None], 
       # [[1000], None], 
       # [[2000], None], 
-      [[100,100], 0.2], 
-      [[100,300], 0.2], 
-      [[300,300], 0.2], 
-      [[100,300,100], 0.2]
+      # [[100,100], 0.2], 
+      # [[100,300], 0.2], 
+      # [[300,300], 0.2], 
+      # [[100,300,100], 0.2]
     ),
     # timesteps=[3, 5, 10, 15, 20, 30, 50, 60, 90]
-    timesteps=[15, 30, 60]
+    timesteps=[5],
+    steps_ahead=range(1, 4)
   )
 
   param_sequence = []
@@ -148,6 +159,7 @@ def train_symbol(symbol):
       'layers': p[0],
       'dropout': p[1],
       'timesteps': p[2],
+      'steps_ahead': p[3],
       'test_set': 30,
       'val_set': 30,
       'batch_size': 10,
@@ -158,7 +170,7 @@ def train_symbol(symbol):
 
 
   # start runner
-  runner(param_sequence, predict=10, verbose=1)
+  runner(param_sequence, verbose=1)
 
 def main():
 
