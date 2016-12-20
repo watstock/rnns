@@ -51,7 +51,7 @@ def runner(param_sequence, verbose=0):
     params.pop('df', None)
 
     print('\nParams:', params)
-    print('Prediction Accuracy:', results.get('prediction_accuracy'))
+    print('Prediction Accuracy:', results.get('accuracy'))
 
     save_prediction_to_db(results)
 
