@@ -265,7 +265,7 @@ def run(params, verbose=1):
 
   # Building n-day prediction
   last_date = df.index[-1]
-  prediction_date = utils.next_work_day(last_date).strftime('%Y-%m-%d')
+  prediction_date = utils.next_work_day(last_date, distance=steps_ahead).strftime('%Y-%m-%d')
 
   result = {
     'symbol': symbol,
