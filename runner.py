@@ -127,17 +127,17 @@ def train_symbol(symbol):
       # [[100], None], 
       # [[150], None], 
       # [[200], None], 
-      [[300], None], 
+      # [[300], None], 
       # [[500], None], 
       # [[1000], None], 
       # [[2000], None], 
-      # [[100,100], 0.2], 
-      # [[100,300], 0.2], 
-      # [[300,300], 0.2], 
-      # [[100,300,100], 0.2]
+      [[100,100], 0.2], 
+      [[100,300], 0.2], 
+      [[300,300], 0.2], 
+      [[100,300,100], 0.2]
     ),
     # timesteps=[3, 5, 10, 15, 20, 30, 50, 60, 90]
-    timesteps=[5]
+    timesteps=[15, 30, 60]
   )
 
   param_sequence = []
@@ -163,7 +163,7 @@ def train_symbol(symbol):
 def main():
 
   # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
+  symbols = ['AAPL']
   for symbol in symbols:
     train_symbol(symbol)
 
