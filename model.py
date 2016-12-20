@@ -249,7 +249,7 @@ def run(params, verbose=1):
     print('Features:', df.columns.values)
     print('Architecture:', architecture)
     print('Dropout:', dropout)
-    print('Predict: %s steps ahead' % steps_ahead)
+    print('Predict: %s step(s) ahead' % steps_ahead)
 
   # Normalize the dataset
   dataset, scaler = normalize_dataframe(df)

@@ -139,8 +139,8 @@ def train_symbol(symbol):
       # [[100,300,100], 0.2]
     ),
     # timesteps=[3, 5, 10, 15, 20, 30, 50, 60, 90]
-    timesteps=[3, 5, 10],
-    steps_ahead=range(1, 6)
+    timesteps=[3, 5],
+    steps_ahead=range(1, 11)
   )
 
   param_sequence = []
@@ -167,7 +167,7 @@ def train_symbol(symbol):
 def main():
 
   # ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
-  symbols = ['AAPL']
+  symbols = ['AAPL', 'AMZN', 'FB', 'GOOGL', 'GRPN', 'NFLX', 'NVDA', 'PCLN', 'TSLA']
   for symbol in symbols:
     train_symbol(symbol)
 
