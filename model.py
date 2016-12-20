@@ -116,9 +116,6 @@ def calculate_model(symbol, dataset, scaler, architecture, steps_ahead=1,
   timesteps=15, testset=30, valset=30, dropout=None, batch_size=10, epochs=500, 
   early_stopping_patience=5, verbose=1):
 
-  if verbose == 1:
-    print('\n%s-step prediction model for %s' % (steps_ahead, symbol))
-
   # Split into train and test sets
   X_train, Y_train, X_test, Y_test = split_dataset(dataset, timesteps=timesteps, testset=testset, steps_ahead=steps_ahead)
   if verbose == 1:
