@@ -278,8 +278,8 @@ def run(params, verbose=1):
     'early_stopping_patience': early_stopping_patience,
     'prediction_date': prediction_date,
     'prediction': prediction,
-    'prediction_model': model_params,
-    'prediction_accuracy': model_params.get('test_accuracy')
+    'model': model_params,
+    'accuracy': model_params.get('test_accuracy')
   }
 
   if verbose == 1:
