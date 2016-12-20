@@ -126,7 +126,7 @@ def train_symbol(symbol):
   params = build_params(
     architectures=(
       # [[50], None], 
-      [100], None], 
+      [[100], None], 
       # [[150], None], 
       # [[200], None], 
       # [[300], None], 
