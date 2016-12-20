@@ -28,7 +28,7 @@ def save_prediction_to_db(data):
   client = MongoClient(MONGODB_CONNECTION)
   
   db = client.watstock
-  collection = db.predictions2
+  collection = db.prediction_models
 
   prediction = data
 
@@ -139,7 +139,7 @@ def train_symbol(symbol):
       # [[100,300,100], 0.2]
     ),
     # timesteps=[3, 5, 10, 15, 20, 30, 50, 60, 90]
-    timesteps=[3, 5],
+    timesteps=[5],
     steps_ahead=range(1, 11)
   )
 
