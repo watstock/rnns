@@ -37,15 +37,7 @@ def save_prediction_to_db(data):
   prediction['date'] = now.strftime('%Y-%m-%d')
 
   prediction_id = collection.insert_one(prediction).inserted_id
-  print('Prediction saved to the db, id:', prediction_id)
-
-
-def add_day_of_year_data(df):
-  df_dayofyear = pd.to_datetime(df.index.values).dayofyear
-  dayofyear_df = pd.DataFrame(data=df_dayofyear, index=df.index.values, columns=['Day of year'])
-  
-  dayofyear_df = dayofyear_df.join(df)
-  return dayofyear_df
+  print('Prediction saved to the db:', prediction_id)
 
 def runner(param_sequence, verbose=0):
 
@@ -61,7 +53,7 @@ def runner(param_sequence, verbose=0):
     print('\nParams:', params)
     print('Prediction Accuracy:', results.get('prediction_accuracy'))
 
-    #save_prediction_to_db(results)
+    save_prediction_to_db(results)
 
 def build_params(architectures, timesteps, steps_ahead):
   params = []
@@ -147,8 +139,8 @@ def train_symbol(symbol):
       # [[100,300,100], 0.2]
     ),
     # timesteps=[3, 5, 10, 15, 20, 30, 50, 60, 90]
-    timesteps=[5],
-    steps_ahead=range(1, 4)
+    timesteps=[3, 5, 10],
+    steps_ahead=range(1, 6)
   )
 
   param_sequence = []
