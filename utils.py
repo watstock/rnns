@@ -4,6 +4,7 @@ Helper methods.
 
 from dateutil.relativedelta import relativedelta
 from pymongo import MongoClient
+import os
 
 def next_work_day(date, distance=1):
   weekend = set([5, 6])
